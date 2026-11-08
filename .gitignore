@@ -51,7 +51,7 @@ mlruns/
 # Upstream clones are nested git repositories. See FOSS_GH_CLI_GUIDE.md.
 external_repos/
 
-# Paused web UI: install and build outputs
+# VayuDrishti 3D web twin: install and build outputs
 web/node_modules/
 web/dist/
 web/tsconfig.tsbuildinfo

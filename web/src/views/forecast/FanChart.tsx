@@ -11,6 +11,7 @@ import { C, OVERLAY_KEYS, SHORT_MODEL, dayLabel, useWidth, type OverlayKey } fro
 const H = 380
 const M = { top: 34, right: 16, bottom: 30, left: 46 }
 const FOUNDATION = new Set<string>(['m7', 'm8', 'timesfm_mean', 'chronos_mean'])
+const WIND = '#CFE3F2'
 
 type Pt = { i: number; v: number }
 type Band = { i: number; lo: number; hi: number }
@@ -61,6 +62,7 @@ export function FanChart({
   const [hoverIdx, setHoverIdx] = useState<number | null>(null)
   const [overlays, setOverlays] = useState<Set<OverlayKey>>(() => new Set())
   const [hoverKey, setHoverKey] = useState<OverlayKey | null>(null)
+  const [showCams, setShowCams] = useState(false)
 
   const st = fc.stations[String(sid)]
   const [a, b] = range
@@ -80,14 +82,14 @@ export function FanChart({
     for (let i = a; i <= b; i++) {
       const q = st.q21[i]
       const d = st.deciles[i]
-      for (const v of [q?.[19], d?.[8], st.obs[i], st.models.ensemble?.[i]]) if (v != null && v > max) max = v
+      for (const v of [q?.[19], d?.[8], st.obs[i], st.models.ensemble?.[i], showCams ? st.cams[i] : null]) if (v != null && v > max) max = v
       for (const k of visibleOverlays) {
         const v = st.models[k]?.[i]
         if (v != null && v > max) max = v
       }
     }
     return scaleLinear().domain([0, max * 1.06]).range([ih, 0]).nice()
-  }, [a, b, st, ih, visibleOverlays])
+  }, [a, b, st, ih, visibleOverlays, showCams])
 
   const cx0 = (i: number) => x(i + 0.5)
 
@@ -108,6 +110,7 @@ export function FanChart({
       d1090: ar(bandPts(st.deciles, 0, 8, a, b)) ?? '',
       d3070: ar(bandPts(st.deciles, 2, 6, a, b)) ?? '',
       ens: ln(pts(st.models.ensemble, a, b)) ?? '',
+      cams: ln(pts(st.cams, a, b)) ?? '',
       models,
     }
   }, [st, a, b, x, y])
@@ -158,6 +161,13 @@ export function FanChart({
   const cutoffIdx = fc.hours.findIndex((h) => h.slice(0, 16) === fc.meta.cutoff_t0.slice(0, 16))
   const clipX = (v: number) => Math.max(0, Math.min(iw, v))
   const inRange = (s: number, e: number) => e > a && s <= b
+  const privateBadgeW = Math.min(278, Math.max(160, iw - 8))
+  const privateBadgeX = priv
+    ? Math.max(
+        privateBadgeW / 2 + 4,
+        Math.min(iw - privateBadgeW / 2 - 4, (clipX(x(priv.start)) + clipX(x(priv.end + 1))) / 2),
+      )
+    : 0
 
   function idxFromEvent(e: MouseEvent<SVGRectElement>) {
     const r = e.currentTarget.getBoundingClientRect()
@@ -176,7 +186,7 @@ export function FanChart({
   const cursorIn = hour >= a && hour <= b
   const ensAtCursor = st.models.ensemble?.[hour] ?? null
   const hi = hoverIdx
-  const tip = hi == null ? null : buildTip(fc, st, hi, hoverKey)
+  const tip = hi == null ? null : buildTip(fc, st, hi, hoverKey, showCams)
   const tipLeft = hi == null ? 0 : M.left + cx0(hi)
   const tipFlip = tipLeft > width - 230
 
@@ -348,6 +358,11 @@ export function FanChart({
                 )
               })}
 
+              {/* Raw uncalibrated CAMS */}
+              {showCams && (
+                <path d={paths.cams} fill="none" stroke={WIND} strokeOpacity={0.75} strokeWidth={1.25} strokeDasharray="5 4" />
+              )}
+
               {/* Ensemble */}
               <path d={paths.ens} fill="none" stroke={C.ink} strokeWidth={4} strokeOpacity={0.6} />
               <path d={paths.ens} fill="none" stroke={C.paper} strokeWidth={1.75} strokeLinejoin="round" />
@@ -375,16 +390,24 @@ export function FanChart({
               </text>
             )}
             {priv && inRange(priv.start, priv.end + 1) && (
-              <text
-                x={(clipX(x(priv.start)) + clipX(x(priv.end + 1))) / 2}
-                y={14}
-                textAnchor="middle"
-                fontSize={11}
-                fontWeight={500}
-                fill={C.paper}
-              >
-                {clipX(x(priv.end + 1)) - clipX(x(priv.start)) > 110 ? 'Scored window · 11–12 Nov' : 'Scored'}
-              </text>
+              <g pointerEvents="none" aria-label="Scored Private LB Window: Nov 11–12, 2026, 48 hours, 192 rows">
+                <rect
+                  x={privateBadgeX - privateBadgeW / 2}
+                  y={3}
+                  width={privateBadgeW}
+                  height={42}
+                  rx={6}
+                  fill={C.paper}
+                  stroke={C.ink}
+                  strokeWidth={1}
+                />
+                <text x={privateBadgeX} y={18} textAnchor="middle" fontSize={9} fontWeight={700} letterSpacing={0.65} fill={C.ink}>
+                  {privateBadgeW >= 250 ? 'SCORED PRIVATE LB WINDOW' : 'PRIVATE LB · 192 ROWS'}
+                </text>
+                <text x={privateBadgeX} y={34} textAnchor="middle" fontSize={11} fontWeight={600} fill={C.ink}>
+                  {privateBadgeW >= 250 ? 'Nov 11–12, 2026 · 48h · 192 rows' : 'Nov 11–12, 2026 · 48h'}
+                </text>
+              </g>
             )}
 
             {/* Block ribbon */}
@@ -420,6 +443,9 @@ export function FanChart({
                   <circle cx={cx0(hi)} cy={y(st.models.ensemble[hi]!)} r={3} fill={C.paper} />
                 )}
                 {st.obs[hi] != null && <circle cx={cx0(hi)} cy={y(st.obs[hi]!)} r={3.2} fill="none" stroke={C.paper} strokeWidth={1.4} />}
+                {showCams && st.cams[hi] != null && (
+                  <circle cx={cx0(hi)} cy={y(st.cams[hi]!)} r={3} fill={C.ink} stroke={WIND} strokeWidth={1.3} />
+                )}
                 {hoverKey && st.models[hoverKey]?.[hi] != null && (
                   <circle cx={cx0(hi)} cy={y(st.models[hoverKey][hi]!)} r={2.5} fill={C.mute} />
                 )}
@@ -463,6 +489,20 @@ export function FanChart({
             )}
           </div>
           <div className="flex flex-wrap gap-1.5">
+            <button
+              aria-pressed={showCams}
+              title="Raw CAMS · uncalibrated Open-Meteo prior"
+              onClick={() => setShowCams((value) => !value)}
+              className={cx(
+                'inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-2xs transition-colors',
+                showCams ? 'border-line-strong bg-paper/8 text-paper' : 'border-line text-mute hover:text-paper',
+              )}
+            >
+              <svg width="16" height="6" aria-hidden>
+                <line x1="0" x2="16" y1="3" y2="3" stroke={WIND} strokeWidth={1.4} strokeDasharray="5 4" />
+              </svg>
+              Raw CAMS
+            </button>
             {OVERLAY_KEYS.map((k) => {
               const on = overlays.has(k)
               return (
@@ -532,7 +572,7 @@ function Legend() {
   )
 }
 
-function buildTip(fc: Forecasts, st: Forecasts['stations'][string], i: number, hoverKey: OverlayKey | null) {
+function buildTip(fc: Forecasts, st: Forecasts['stations'][string], i: number, hoverKey: OverlayKey | null, showCams: boolean) {
   const p = istParts(fc.hours[i])
   const ens = st.models.ensemble?.[i] ?? null
   const d = st.deciles[i]
@@ -558,6 +598,7 @@ function buildTip(fc: Forecasts, st: Forecasts['stations'][string], i: number, h
           </Row>
           {d && <Row label="80% range">{`${fmt(d[0])} – ${fmt(d[8])}`}</Row>}
           {obs != null && <Row label="Observed">{fmt(obs)}</Row>}
+          {showCams && st.cams[i] != null && <Row label="Raw CAMS">{fmt(st.cams[i])}</Row>}
           {hoverKey && st.models[hoverKey]?.[i] != null && <Row label={SHORT_MODEL[hoverKey]}>{fmt(st.models[hoverKey][i])}</Row>}
         </div>
       )}

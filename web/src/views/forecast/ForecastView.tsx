@@ -10,6 +10,7 @@ import { WeightsSection } from './WeightsSection'
 import { MeanMedianSection } from './MeanMedianSection'
 import { HampelSection } from './HampelSection'
 import { AnalogSection } from './AnalogSection'
+import { TimeMixerSection } from './TimeMixerSection'
 import { usePrefersReducedMotion } from './shared'
 
 type RangeKey = 'scored' | 'cursor' | 'month' | 'validation'
@@ -116,6 +117,10 @@ export function ForecastView() {
         </Reveal>
 
         <div className="mt-16 space-y-16">
+          <Reveal reduced={reduced}>
+            <TimeMixerSection fc={fc} sid={sid} range={range} hour={hour} setHour={setHour} />
+          </Reveal>
+
           <Reveal reduced={reduced}>
             <AccuracySection fc={fc} />
           </Reveal>

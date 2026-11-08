@@ -1,5 +1,6 @@
-# Technical & Civic Impact Proposal — VayuDrishti Mumbai (`Mumbai AirPulse AI`)
+# Technical & Civic Impact Proposal — वायुदृष्टि VayuDrishti (`VayuDrishti Mumbai`)
 
+**Repository:** [`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti)  
 **Submitted to:** Google × Zindi × Beyond × ClimateVerse Judging Panel  
 **Competition:** *Google Mumbai Air Quality Data Challenge (2026)*  
 **Award Tracks:**

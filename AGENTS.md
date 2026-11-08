@@ -1,5 +1,6 @@
 # Agentic Engineering & Vibe-Coding Steering Guide (`AGENTS.md`)
 
+**Project & Repository:** **वायुदृष्टि VayuDrishti** ([`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti))  
 **Workspace:** `/Volumes/MacExt/Projects/google-mumbai-air-quality`  
 **Competition:** Zindi × Google × Beyond × ClimateVerse — *Google Mumbai Air Quality Data Challenge (2026)*  
 **Supported Harnesses:** Claude Code, Cursor, Google Gemini CLI, OpenAI Codex CLI, AWS Kiro / AI-DLC v2
@@ -10,7 +11,7 @@
 
 Any AI coding agent operating in this repository is responsible for maintaining and advancing two tightly coupled tracks:
 1. **Track 1 — Main Zindi Forecasting Leaderboard ($2,500 1st Place):** Predict hourly $\text{PM}_{2.5}$ ($\mu\text{g/m}^3$) across 4 Mumbai CPCB stations (`11606` Borivali East, `11611` Malad West, `3409510` Byculla, `3409511` Shivaji Nagar) for all `2,592` rows in `Test.csv` (`2026-10-22` to `2026-11-17`), evaluated by **RMSE** on the **Nov 11–12, 2026 Private Leaderboard window (`192` rows)**.
-2. **Track 2 — Most Creative Submission ($500 Special Award):** Maintain and enhance **VayuDrishti Mumbai (`Mumbai AirPulse AI`)** (`app/mumbai_airpulse_app.py`), our 4-tab hyperlocal 24-Ward air quality intelligence, conformal risk warning, UDISE+ school/hospital audit, and Google Gemini 2.5 Flash BMC GRAP Copilot platform.
+2. **Track 2 — Most Creative Submission ($500 Special Award):** Maintain and enhance **वायुदृष्टि VayuDrishti Mumbai** (`web/` 3D WebGL Atmospheric Digital Twin + `app/mumbai_airpulse_app.py` 4-tab Streamlit platform), covering hyperlocal 24-Ward air quality intelligence, conformal risk warning, UDISE+ school/hospital audit, and Google Gemini BMC GRAP Copilot.
 
 ---
 

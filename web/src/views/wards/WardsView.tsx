@@ -1,4 +1,7 @@
+import { useState } from 'react'
 import { useData, useTwin } from '../../state/store'
+import { CatalogExplorer } from '../../ui/CatalogExplorer'
+import { Segmented } from '../../ui/primitives'
 import { Copilot } from './Copilot'
 import { ResponseOrder } from './ResponseOrder'
 import { WardList } from './WardList'
@@ -6,9 +9,12 @@ import { WardProfile } from './WardProfile'
 
 const COL = 'min-[1100px]:h-full min-[1100px]:overflow-y-auto min-[1100px]:overscroll-contain'
 
+type CenterMode = 'exposure' | 'catalog'
+
 export function WardsView() {
   const data = useData()
   const wardCode = useTwin((s) => s.wardCode)
+  const [centerMode, setCenterMode] = useState<CenterMode>('exposure')
   const ward = data.wards.wards.find((w) => w.code === wardCode) ?? data.wards.wards[0]
 
   if (!ward) {
@@ -23,8 +29,26 @@ export function WardsView() {
         <aside aria-label="Ward ranking" className={`${COL} max-h-[60vh] overflow-y-auto border-b border-line min-[1100px]:max-h-none min-[1100px]:border-b-0 min-[1100px]:border-r`}>
           <WardList />
         </aside>
-        <section aria-label={`Ward ${ward.code} profile`} className={COL}>
-          <WardProfile ward={ward} />
+        <section aria-label={centerMode === 'exposure' ? `Ward ${ward.code} profile` : 'ClimateVerse data catalog'} className={COL}>
+          <div className="sticky top-0 z-20 border-b border-line bg-ink/95 px-3 py-2.5 backdrop-blur">
+            <Segmented<CenterMode>
+              size="sm"
+              className="w-full [&>button]:flex-1"
+              value={centerMode}
+              onChange={setCenterMode}
+              options={[
+                { value: 'exposure', label: 'Ward exposure & facilities' },
+                { value: 'catalog', label: 'ClimateVerse data catalog (15 / 92 DOIs)' },
+              ]}
+            />
+          </div>
+          {centerMode === 'exposure' ? (
+            <WardProfile ward={ward} />
+          ) : (
+            <div className="px-5 pb-10 pt-4">
+              <CatalogExplorer />
+            </div>
+          )}
         </section>
         <aside aria-label="Response order and copilot" className={`${COL} space-y-4 px-4 pb-6 pt-1 min-[1100px]:px-2 min-[1100px]:pr-1`}>
           <ResponseOrder ward={ward} />

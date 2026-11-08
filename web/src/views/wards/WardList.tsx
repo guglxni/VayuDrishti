@@ -6,7 +6,16 @@ import { fmt, sampleAt } from '../../lib/series'
 import { useData, useTwin } from '../../state/store'
 import { cx, Eyebrow } from '../../ui/primitives'
 import { GrapChip, Sparkline } from './parts'
-import { whenLabel } from './util'
+import { whenLabel, fmtInt } from './util'
+
+type SortMode = 'pm' | 'peak' | 'vuln' | 'maharera'
+
+const SORT_OPTIONS: { value: SortMode; label: string; heading: string }[] = [
+  { value: 'pm', label: 'PM2.5 now', heading: 'Wards by PM2.5 now' },
+  { value: 'peak', label: 'Nov 11–12 peak', heading: 'Wards by Nov 11–12 peak' },
+  { value: 'vuln', label: 'Vulnerable pop', heading: 'Wards by vulnerable population' },
+  { value: 'maharera', label: 'MahaRERA sites', heading: 'Wards by MahaRERA construction sites' },
+]
 
 interface Row {
   ward: Ward
@@ -20,18 +29,44 @@ const STAGES = [
   { level: 0, label: 'Watch', color: grapStage(0).color },
 ] as const
 
+function secondaryMetric(ward: Ward, mode: SortMode): string | null {
+  switch (mode) {
+    case 'pm':
+      return null
+    case 'peak':
+      return `Nov 11–12 peak ${fmt(ward.private_peak, 0)} µg/m³ · ${whenLabel(ward.private_peak_at)} IST`
+    case 'vuln':
+      return `${fmtInt(ward.vulnerable_pop)} vulnerable residents`
+    case 'maharera':
+      return `${fmtInt(ward.maharera_sites)} MahaRERA construction sites`
+  }
+}
+
 export function WardList() {
   const data = useData()
   const hour = useTwin((s) => s.hour)
   const wardCode = useTwin((s) => s.wardCode)
   const setWard = useTwin((s) => s.setWard)
   const [query, setQuery] = useState('')
+  const [sortMode, setSortMode] = useState<SortMode>('pm')
   const buttons = useRef(new Map<string, HTMLButtonElement>())
 
   const ranked = useMemo<Row[]>(() => {
     const rows = data.wards.wards.map((ward) => ({ ward, pm: sampleAt(ward.series, hour) }))
-    return rows.sort((a, b) => (b.pm ?? -1) - (a.pm ?? -1))
-  }, [data, hour])
+    const value = (row: Row) => {
+      switch (sortMode) {
+        case 'pm':
+          return row.pm ?? -1
+        case 'peak':
+          return row.ward.private_peak
+        case 'vuln':
+          return row.ward.vulnerable_pop
+        case 'maharera':
+          return row.ward.maharera_sites
+      }
+    }
+    return rows.sort((a, b) => value(b) - value(a) || a.ward.name.localeCompare(b.ward.name))
+  }, [data, hour, sortMode])
 
   const rankOf = useMemo(() => new Map(ranked.map((r, i) => [r.ward.code, i + 1])), [ranked])
 
@@ -69,8 +104,28 @@ export function WardList() {
     <div className="flex min-h-full flex-col">
       <div className="sticky top-0 z-10 bg-ink px-4 pb-3 pt-1">
         <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-[15px] font-semibold tracking-tight text-paper">Wards by PM2.5 now</h2>
+          <h2 className="text-[15px] font-semibold tracking-tight text-paper">{SORT_OPTIONS.find((option) => option.value === sortMode)?.heading}</h2>
           <span className="font-mono text-2xs tnum text-faint">{whenLabel(data.forecasts.hours[hour])}</span>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-1" role="group" aria-label="Rank wards by">
+          {SORT_OPTIONS.map((option) => {
+            const active = option.value === sortMode
+            return (
+              <button
+                key={option.value}
+                aria-pressed={active}
+                title={option.heading}
+                onClick={() => setSortMode(option.value)}
+                className={cx(
+                  'rounded-[7px] border px-2 py-1.5 text-left text-[10px] font-medium leading-tight transition-colors',
+                  active ? 'border-line-strong bg-paper text-ink' : 'border-line text-mute hover:bg-paper/5 hover:text-paper',
+                )}
+              >
+                {option.label}
+              </button>
+            )
+          })}
         </div>
 
         <div className="mt-3" aria-label="Wards by GRAP stage this hour">
@@ -165,6 +220,11 @@ export function WardList() {
                   <span className={cx('truncate text-[13px]', active ? 'text-paper' : 'text-paper/85')}>{ward.name}</span>
                 </span>
                 <span className="block truncate text-2xs text-faint">{ward.zone}</span>
+                {secondaryMetric(ward, sortMode) && (
+                  <span className="mt-0.5 block truncate text-[10px] text-mute" title={secondaryMetric(ward, sortMode) ?? undefined}>
+                    {secondaryMetric(ward, sortMode)}
+                  </span>
+                )}
               </span>
               <Sparkline series={ward.series} from={hour} width={56} height={20} />
               <span className="flex w-[62px] shrink-0 flex-col items-end gap-0.5">

@@ -42,7 +42,7 @@ function landMask(outline: [number, number][]): HTMLCanvasElement {
   c.height = GRID_H
   const ctx = c.getContext('2d')!
   const { west, east, south, north } = SURFACE_BOUNDS
-  ctx.filter = 'blur(3px)'
+  ctx.filter = 'blur(5px)'
   ctx.fillStyle = '#fff'
   ctx.beginPath()
   outline.forEach(([lon, lat], i) => {

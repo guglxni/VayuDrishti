@@ -1,9 +1,10 @@
-# System Architecture — Google Mumbai Air Quality Forecasting Challenge & VayuDrishti Mumbai
+# System Architecture — वायुदृष्टि VayuDrishti (`VayuDrishti Mumbai`) & Multi-Paradigm Forecasting Engine
 
+**Repository:** [`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti)  
 **Competition:** Zindi × Google × Beyond × ClimateVerse — *Google Mumbai Air Quality Data Challenge (2026)*  
 **Dual-Track Engineering Scope:**
 - **Track 1 (Main Zindi Forecasting Leaderboard — $2,500 1st Place):** Multi-horizon hourly $\text{PM}_{2.5}$ point forecasting across 4 Mumbai CPCB/CAAQMS stations (`11606` Borivali East, `11611` Malad West, `3409510` Byculla, `3409511` Shivaji Nagar) evaluated by Root Mean Squared Error ($\text{RMSE}$) across rolling 48-hour public windows and the final **2026-11-11 00:00 IST to 2026-11-12 23:00 IST Private Leaderboard window** (`192` rows within `2,592` total test rows).
-- **Track 2 ($500 Most Creative Submission — VayuDrishti Mumbai / Mumbai AirPulse AI):** Hyperlocal 24-Ward Spatiotemporal Air Quality Intelligence, Conformal Risk Explorer, UDISE+ School & BMC Hospital Exposure Audit, and Google Gemini 2.5 Flash Civic GRAP Copilot (`app/mumbai_airpulse_app.py`).
+- **Track 2 ($500 Most Creative Submission — वायुदृष्टि VayuDrishti Mumbai):** Hyperlocal 24-Ward Spatiotemporal Air Quality Intelligence, 3D WebGL Atmospheric Digital Twin (`web/`), Conformal Risk Explorer, UDISE+ School & BMC Hospital Exposure Audit, and Multi-Provider Gemini Civic GRAP Copilot (`app/mumbai_airpulse_app.py`).
 
 ---
 

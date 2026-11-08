@@ -1,5 +1,12 @@
 @import "tailwindcss";
-@import "maplibre-gl/dist/maplibre-gl.css";
+@import "maplibre-gl/dist/maplibre-gl.css" layer(base);
+
+.map-root {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
 
 /*
  * VayuDrishti design tokens.

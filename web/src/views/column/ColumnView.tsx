@@ -1,6 +1,7 @@
 import { useMemo, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { useData, useTwin } from '../../state/store'
+import { fluxEdges } from '../../lib/physics'
 import { ColumnHud } from './ColumnHud'
 import { deriveColumn, fmtInt, sceneTargets, type SceneTargets } from './derive'
 import { ColumnScene } from './Scene'
@@ -10,6 +11,10 @@ export function ColumnView() {
   const hour = useTwin((s) => s.hour)
   const stationId = useTwin((s) => s.stationId)
   const st = useMemo(() => deriveColumn(data, stationId, hour), [data, stationId, hour])
+  const fluxes = useMemo(
+    () => fluxEdges(data, hour).filter((edge) => edge.src === stationId || edge.dst === stationId),
+    [data, hour, stationId],
+  )
   const targets = useRef<SceneTargets>(sceneTargets(st))
   targets.current = sceneTargets(st)
 
@@ -31,13 +36,15 @@ export function ColumnView() {
             targets={targets}
             cityInput={{ seed: stationId, ...st.morphology }}
             stationId={stationId}
+            stations={data.stations.stations}
             sources={st.sources}
+            fluxes={fluxes}
             lidText={lidText}
             peakText={peakText}
           />
         </Canvas>
       </div>
-      <ColumnHud data={data} st={st} stationId={stationId} />
+      <ColumnHud data={data} st={st} stationId={stationId} fluxes={fluxes} />
       <div className="pointer-events-none absolute right-5 top-20 z-10 text-right text-2xs text-faint">
         Drag to orbit · scroll to zoom
       </div>

@@ -1,6 +1,7 @@
 # Claude Code & AI Agent Context (`CLAUDE.md`)
 
-**Project:** Google Mumbai Air Quality Forecasting Challenge & VayuDrishti Mumbai (`2026`)  
+**Project:** **वायुदृष्टि VayuDrishti (`VayuDrishti Mumbai`)** — Google Mumbai Air Quality Forecasting Challenge (`2026`)  
+**Repository:** [`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti)  
 **Root Path:** `/Volumes/MacExt/Projects/google-mumbai-air-quality`  
 **Methodology:** AWS AI-Driven Development Life Cycle (**AI-DLC v2**, `.aidlc/`)
 
@@ -18,7 +19,7 @@
    - `src/ensemble.py` — Out-of-Fold (OOF) `SLSQP` + `Nelder-Mead` simplex optimizer and variance shrinkage evaluator (8-model regime-adaptive stack: `24h Oct OOF RMSE = 9.1531 µg/m³`, `72h Oct OOF RMSE = 9.2545 µg/m³`, `15h Post-Diwali Early-Nov OOF RMSE = 6.2616 µg/m³` / `6.0855 µg/m³` on `Nov 1–2`, and `0.0` Public LB score `xP5LoEHK` & `sK5XpFqb`).
    - `src/submit.py` — Trains final ensemble, executes Known-Row Lookup against `Train.csv`, runs 6 hard submission assertions (`2,592` rows), writes `submissions/submission_latest.csv`, and uploads to Zindi (`--upload`).
    - `notebooks/Mumbai_Winning_Colab.ipynb` & `notebooks/Mumbai_Winning_Solution.ipynb` — Self-contained notebooks integrating the full 8-model architecture (adding `Model 7: Google TimesFM 3.0` and `Model 8: Amazon Chronos-2 + Analog Ensemble`) for Top-10 Code Review on a free Google Colab T4 GPU.
-   - `app/mumbai_airpulse_app.py` — **VayuDrishti Mumbai (`Mumbai AirPulse AI`)**, our 4-tab Streamlit civic intelligence platform for the $500 Most Creative Submission Award.
+   - `app/mumbai_airpulse_app.py` & `web/` — **वायुदृष्टि VayuDrishti Mumbai**, our dual-interface Track 2 platform (4-tab Streamlit civic intelligence app + 3D WebGL / MapLibre / Deck.gl / Three.js atmospheric digital twin) for the $500 Most Creative Submission Award.
 
 2. **Critical Rules (Summary of `AGENTS.md`):**
    - **Never leak future data:** Always enforce `hour_end <= cutoff_t0` for historical targets and VABB METAR observations. Never use VABB visibility or weather codes.

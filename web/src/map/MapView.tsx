@@ -1,13 +1,15 @@
 import '../lib/maplibreWorker'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Map as MlMap, NavigationControl, type ImageSource } from 'maplibre-gl'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { Map as MlMap, NavigationControl, type GeoJSONSource, type ImageSource } from 'maplibre-gl'
 import { MapboxOverlay } from '@deck.gl/mapbox'
-import { ColumnLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
+import { ArcLayer, ColumnLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers'
 import { TripsLayer } from '@deck.gl/geo-layers'
 import { PathStyleExtension } from '@deck.gl/extensions'
 import type { Layer, PickingInfo } from '@deck.gl/core'
 import { useData, useTwin } from '../state/store'
-import { pmRGB } from '../lib/aqi'
+import type { TwinData } from '../data/types'
+import { pmColor, pmRGB } from '../lib/aqi'
+import { fluxEdges, type FluxEdge } from '../lib/physics'
 import { sampleAt } from '../lib/series'
 import { stationName, TARGET_IDS } from '../lib/stations'
 import { BEFORE_DATA_LAYER, BEFORE_LABELS, buildBasemapStyle } from './basemap'
@@ -22,11 +24,35 @@ const ELEV_PER_UG = 60
 export const CAMERAS = {
   sea: { center: [72.872, 19.085] as [number, number], zoom: 10.85, pitch: 58, bearing: 96 },
   north: { center: [72.875, 19.09] as [number, number], zoom: 10.55, pitch: 40, bearing: -12 },
+  deonar: { center: [72.923, 19.051] as [number, number], zoom: 13.1, pitch: 62, bearing: -75 },
+  malad: { center: [72.84, 19.187] as [number, number], zoom: 13, pitch: 58, bearing: 65 },
+  borivali: { center: [72.868, 19.229] as [number, number], zoom: 13, pitch: 58, bearing: 45 },
+  byculla: { center: [72.833, 18.976] as [number, number], zoom: 13.2, pitch: 60, bearing: 35 },
 }
 
-type Cam = keyof typeof CAMERAS
+export type Cam = keyof typeof CAMERAS
 
 const TARGET_SET = new Set<number>(TARGET_IDS)
+
+interface FluxArc extends FluxEdge {
+  kind: 'airphynet'
+  srcName: string
+  dstName: string
+  sourcePosition: [number, number, number]
+  targetPosition: [number, number, number]
+}
+
+function wardGeoJSON(data: TwinData, hour: number) {
+  return {
+    type: 'FeatureCollection' as const,
+    features: data.wards.wards.map((w, id) => ({
+      type: 'Feature' as const,
+      id,
+      properties: { code: w.code, name: w.name, pm: sampleAt(w.series, hour), color: pmColor(sampleAt(w.series, hour)) },
+      geometry: { type: 'Polygon' as const, coordinates: [[...w.polygon, w.polygon[0]]] },
+    })),
+  }
+}
 
 function fontReady() {
   return Promise.all([
@@ -51,7 +77,7 @@ export function MapView() {
   const [fontsLoaded, setFontsLoaded] = useState(false)
   const [mapError, setMapError] = useState<string | null>(null)
   const [wardPick, setWardPick] = useState<WardPick | null>(null)
-  const [hover, setHover] = useState<{ x: number; y: number; html: string } | null>(null)
+  const [hover, setHover] = useState<{ x: number; y: number; content: ReactNode } | null>(null)
 
   useEffect(() => {
     void fontReady().then(() => setFontsLoaded(true))
@@ -59,11 +85,12 @@ export function MapView() {
 
   // ----- Map + overlay lifecycle -----
   useEffect(() => {
-    if (!containerRef.current) return
+    const container = containerRef.current
+    if (!container) return
     let map: MlMap
     try {
       map = new MlMap({
-        container: containerRef.current,
+        container,
         style: buildBasemapStyle(),
         ...CAMERAS.sea,
         maxPitch: 75,
@@ -81,26 +108,20 @@ export function MapView() {
       return
     }
     mapRef.current = map
+    const resizeObserver = new ResizeObserver(() => mapRef.current?.resize())
+    resizeObserver.observe(container)
     map.addControl(new NavigationControl({ visualizePitch: true }), 'bottom-right')
     map.on('error', (ev) => {
       const msg = ev.error?.message ?? ''
       if (/webgl|worker/i.test(msg)) setMapError(msg)
     })
 
-    const overlay = new MapboxOverlay({ interleaved: true, layers: [] })
+    const overlay = new MapboxOverlay({ interleaved: false, layers: [] })
     overlayRef.current = overlay
     map.addControl(overlay)
 
     map.on('load', () => {
-      const wardsGeo = {
-        type: 'FeatureCollection' as const,
-        features: data.wards.wards.map((w) => ({
-          type: 'Feature' as const,
-          id: data.wards.wards.indexOf(w),
-          properties: { code: w.code, name: w.name },
-          geometry: { type: 'Polygon' as const, coordinates: [[...w.polygon, w.polygon[0]]] },
-        })),
-      }
+      const wardsGeo = wardGeoJSON(data, useTwin.getState().hour)
       const wardLabels = {
         type: 'FeatureCollection' as const,
         features: data.wards.wards.map((w) => ({
@@ -132,8 +153,8 @@ export function MapView() {
           type: 'fill',
           source: 'wards',
           paint: {
-            'fill-color': '#ece7dc',
-            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.06, 0],
+            'fill-color': ['get', 'color'],
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.28, 0.14],
           },
         },
         BEFORE_DATA_LAYER,
@@ -193,6 +214,7 @@ export function MapView() {
     })
 
     return () => {
+      resizeObserver.disconnect()
       overlayRef.current = null
       mapRef.current = null
       map.remove()
@@ -212,13 +234,41 @@ export function MapView() {
   useEffect(() => {
     const map = mapRef.current
     if (!ready || !map) return
+    const wards = map.getSource('wards') as GeoJSONSource | undefined
+    wards?.setData(wardGeoJSON(data, hour))
+  }, [ready, data, hour, layers.wards])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
     map.setLayoutProperty('pm-surface', 'visibility', layers.surface ? 'visible' : 'none')
-    for (const id of ['wards-line', 'wards-code']) map.setLayoutProperty(id, 'visibility', layers.wards ? 'visible' : 'none')
+    for (const id of ['wards-fill', 'wards-line', 'wards-code']) {
+      map.setLayoutProperty(id, 'visibility', layers.wards ? 'visible' : 'none')
+    }
     map.setLayoutProperty(BEFORE_DATA_LAYER, 'visibility', layers.buildings ? 'visible' : 'none')
   }, [ready, layers])
 
   const streamlines = useMemo<Streamline[]>(() => traceStreamlines(data, hour), [data, hour])
   const values = useMemo(() => new Map(stationValues(data, hour).map((v) => [v.id, v.pm])), [data, hour])
+  const fluxes = useMemo(() => fluxEdges(data, hour), [data, hour])
+  const fluxArcs = useMemo<FluxArc[]>(() => {
+    const stations = new Map(data.stations.stations.map((s) => [s.id, s]))
+    return fluxes.flatMap((edge) => {
+      const src = stations.get(edge.src)
+      const dst = stations.get(edge.dst)
+      if (!src || !dst) return []
+      return [
+        {
+          ...edge,
+          kind: 'airphynet' as const,
+          srcName: stationName(src),
+          dstName: stationName(dst),
+          sourcePosition: [src.lon, src.lat, 80],
+          targetPosition: [dst.lon, dst.lat, 80],
+        },
+      ]
+    })
+  }, [data, fluxes])
 
   const staticLayers = useMemo(() => {
     const out: Layer[] = []
@@ -297,7 +347,24 @@ export function MapView() {
             fadeTrail: true,
             trailLength: 9,
             currentTime: reduce ? WIND_LOOP / 2 : (t * 9) % WIND_LOOP,
-            ...({ beforeId: BEFORE_LABELS } as object),
+          }),
+        )
+      }
+      if (layers.airphynet) {
+        out.push(
+          new ArcLayer<FluxArc>({
+            id: 'airphynet-flux',
+            data: fluxArcs,
+            getSourcePosition: (d) => d.sourcePosition,
+            getTargetPosition: (d) => d.targetPosition,
+            getSourceColor: (d) => pmRGB(pm(d.src)),
+            getTargetColor: [207, 227, 242, 210],
+            getWidth: (d) => 1.2 + Math.min(5, d.flux / 15),
+            getHeight: 0.45,
+            widthUnits: 'pixels',
+            widthMinPixels: 1.2,
+            pickable: true,
+            updateTriggers: { getSourceColor: values, getWidth: fluxArcs },
           }),
         )
       }
@@ -310,7 +377,6 @@ export function MapView() {
           getFillColor: (d) => [...pmRGB(pm(d.id)), d.id === stationId ? 60 : 38] as [number, number, number, number],
           stroked: false,
           updateTriggers: { getRadius: [stationId, pulse], getFillColor: [stationId, values] },
-          beforeId: BEFORE_LABELS,
         }),
         new ScatterplotLayer({
           id: 'station-ring',
@@ -322,7 +388,6 @@ export function MapView() {
           getLineColor: [236, 231, 220, 140 - pulse * 80],
           lineWidthMinPixels: 1.2,
           updateTriggers: { getRadius: pulse, getLineColor: pulse },
-          beforeId: BEFORE_LABELS,
         }),
         new ColumnLayer({
           id: 'target-columns',
@@ -337,7 +402,6 @@ export function MapView() {
           material: { ambient: 0.6, diffuse: 0.5, shininess: 32, specularColor: [240, 240, 240] },
           updateTriggers: { getElevation: values, getFillColor: values },
           transitions: reduce ? undefined : { getElevation: 220 },
-          beforeId: BEFORE_LABELS,
         }),
         new ColumnLayer({
           id: 'network-columns',
@@ -352,7 +416,6 @@ export function MapView() {
           material: { ambient: 0.6, diffuse: 0.5, shininess: 16, specularColor: [200, 200, 200] },
           updateTriggers: { getElevation: values, getFillColor: values },
           transitions: reduce ? undefined : { getElevation: 220 },
-          beforeId: BEFORE_LABELS,
         }),
       )
       if (fontsLoaded) {
@@ -423,11 +486,28 @@ export function MapView() {
     }
     tick()
     return () => cancelAnimationFrame(raf)
-  }, [ready, data, streamlines, values, stationId, staticLayers, layers.wind, layers.network, fontsLoaded, setStation])
+  }, [ready, data, streamlines, values, fluxArcs, stationId, staticLayers, layers.wind, layers.airphynet, layers.network, fontsLoaded, setStation])
 
-  function tooltipFor(info: PickingInfo): { x: number; y: number; html: string } | null {
+  function tooltipFor(info: PickingInfo): { x: number; y: number; content: ReactNode } | null {
     const o = info.object as Record<string, unknown> | undefined
     if (!o) return null
+    if (o.kind === 'airphynet' && typeof o.flux === 'number' && typeof o.km === 'number') {
+      return {
+        x: info.x,
+        y: info.y,
+        content: (
+          <>
+            <div className="text-[13px] font-medium">
+              AirPhyNet flux: {String(o.srcName)} → {String(o.dstName)}
+            </div>
+            <div className="mt-1 font-cond text-lg tnum">
+              {o.flux.toFixed(1)} <span className="font-sans text-2xs text-mute">µg/m²/s</span>
+              <span className="ml-2 font-sans text-2xs text-mute">({o.km.toFixed(1)} km)</span>
+            </div>
+          </>
+        ),
+      }
+    }
     if (typeof o.role === 'string' && typeof o.id === 'number') {
       const v = values.get(o.id)
       const name = stationName(o as { id: number; short: string })
@@ -435,20 +515,55 @@ export function MapView() {
       return {
         x: info.x,
         y: info.y,
-        html: `<div class="text-[13px] font-medium">${name}</div><div class="text-2xs text-mute">${role}</div><div class="mt-1 font-cond text-lg tnum">${v != null ? v.toFixed(1) : '—'} <span class="text-2xs text-mute font-sans">µg/m³</span></div>`,
+        content: (
+          <>
+            <div className="text-[13px] font-medium">{name}</div>
+            <div className="text-2xs text-mute">{role}</div>
+            <div className="mt-1 font-cond text-lg tnum">
+              {v != null ? v.toFixed(1) : '—'} <span className="font-sans text-2xs text-mute">µg/m³</span>
+            </div>
+          </>
+        ),
       }
     }
     if (typeof o.category === 'string') {
-      return { x: info.x, y: info.y, html: `<div class="text-[13px] font-medium">${String(o.name)}</div><div class="text-2xs text-mute">${o.category}</div>` }
+      return {
+        x: info.x,
+        y: info.y,
+        content: (
+          <>
+            <div className="text-[13px] font-medium">{String(o.name)}</div>
+            <div className="text-2xs text-mute">{o.category}</div>
+          </>
+        ),
+      }
     }
     if (Array.isArray(o.path)) {
-      return { x: info.x, y: info.y, html: `<div class="text-[13px] font-medium">${String(o.name)}</div><div class="text-2xs text-mute">Traffic emission corridor</div>` }
+      return {
+        x: info.x,
+        y: info.y,
+        content: (
+          <>
+            <div className="text-[13px] font-medium">{String(o.name)}</div>
+            <div className="text-2xs text-mute">Traffic emission corridor</div>
+          </>
+        ),
+      }
     }
     if (typeof o.type === 'string' && (o.type === 'school' || o.type === 'hospital')) {
       return {
         x: info.x,
         y: info.y,
-        html: `<div class="text-[13px] font-medium">${o.indicative ? (o.type === 'school' ? 'School cluster' : 'Hospital') : String(o.name)}</div><div class="text-2xs text-mute">${o.type === 'school' ? 'UDISE+ school' : 'BMC civic hospital'} · ward ${String(o.ward)}</div>`,
+        content: (
+          <>
+            <div className="text-[13px] font-medium">
+              {o.indicative ? (o.type === 'school' ? 'School cluster' : 'Hospital') : String(o.name)}
+            </div>
+            <div className="text-2xs text-mute">
+              {o.type === 'school' ? 'UDISE+ school' : 'BMC civic hospital'} · ward {String(o.ward)}
+            </div>
+          </>
+        ),
       }
     }
     return null
@@ -487,8 +602,9 @@ export function MapView() {
         <div
           className="panel pointer-events-none absolute z-20 px-3 py-2"
           style={{ left: hover.x + 14, top: hover.y + 14 }}
-          dangerouslySetInnerHTML={{ __html: hover.html }}
-        />
+        >
+          {hover.content}
+        </div>
       )}
     </div>
   )

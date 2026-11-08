@@ -4,11 +4,12 @@ import { loadTwinData } from '../data/load'
 
 export type View = 'map' | 'column' | 'forecast' | 'wards'
 
-export type LayerKey = 'surface' | 'wind' | 'wards' | 'network' | 'buildings' | 'sources' | 'facilities'
+export type LayerKey = 'surface' | 'wind' | 'airphynet' | 'wards' | 'network' | 'buildings' | 'sources' | 'facilities'
 
 export const LAYER_LABELS: Record<LayerKey, { label: string; hint: string }> = {
   surface: { label: 'PM2.5 surface', hint: 'Interpolated from 18 stations' },
   wind: { label: 'Wind', hint: 'Open-Meteo 10 m + VABB METAR' },
+  airphynet: { label: 'AirPhyNet flux', hint: 'Wind-guided station-to-station transport' },
   wards: { label: 'Ward boundaries', hint: '24 BMC wards (approximate)' },
   network: { label: 'Other stations', hint: '14 CPCB / MPCB / IITM monitors' },
   buildings: { label: '3D buildings', hint: 'OpenStreetMap footprints' },
@@ -97,6 +98,7 @@ export const useTwin = create<TwinState>((set, get) => ({
   layers: {
     surface: true,
     wind: true,
+    airphynet: true,
     wards: true,
     network: true,
     buildings: true,

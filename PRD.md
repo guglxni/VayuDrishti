@@ -1,10 +1,11 @@
-# Product Requirements Document (PRD) — Google Mumbai Air Quality Forecasting Engine & VayuDrishti Mumbai
+# Product Requirements Document (PRD) — वायुदृष्टि VayuDrishti (`VayuDrishti Mumbai`)
 
-**Product Name:** **VayuDrishti Mumbai (`Mumbai AirPulse AI`) & Multi-Paradigm Forecasting Engine**  
+**Product Name:** **वायुदृष्टि VayuDrishti (`VayuDrishti Mumbai`) & Multi-Paradigm Forecasting Engine**  
+**Repository:** [`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti)  
 **Competition:** Zindi × Google × Beyond × ClimateVerse — *Google Mumbai Air Quality Data Challenge (2026)*  
 **Target Tracks:**
 1. **Track 1 — Main Forecasting Leaderboard ($2,500 1st / $1,500 2nd / $1,000 3rd):** Hourly $\text{PM}_{2.5}$ forecasting across 4 Mumbai CPCB stations (`2,592` test rows; Private LB evaluated on `2026-11-11` to `2026-11-12`).
-2. **Track 2 — Most Creative Submission Award ($500 USD):** Interactive ward-level air quality intelligence, conformal risk warning, vulnerable facility exposure audit, and Google Gemini 2.5 Flash civic action copilot (`app/mumbai_airpulse_app.py`).
+2. **Track 2 — Most Creative Submission Award ($500 USD):** Interactive 3D WebGL atmospheric digital twin (`web/`) & 4-tab Streamlit ward-level air quality intelligence, conformal risk warning, vulnerable facility exposure audit, and Google Gemini civic action copilot (`app/mumbai_airpulse_app.py`).
 
 ---
 

@@ -1,7 +1,8 @@
-"""VayuDrishti Mumbai / Mumbai AirPulse AI
+"""वायुदृष्टि VayuDrishti Mumbai
 ===========================================================================
 Hyperlocal Spatiotemporal Air Quality Intelligence, Conformal Forecasting &
 Civic Decision-Support Platform for the Google Mumbai Data Challenge.
+Repository: https://github.com/guglxni/VayuDrishti
 
 Built for the $500 Most Creative Submission Award judged by Google, Zindi & ClimateVerse.
 
@@ -62,7 +63,7 @@ from app.spatial_catalog import (
 # Page Configuration & Styling
 # ---------------------------------------------------------------------------
 st.set_page_config(
-    page_title="VayuDrishti Mumbai · AirPulse AI",
+    page_title="वायुदृष्टि VayuDrishti Mumbai",
     page_icon=":material/air:",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -173,9 +174,9 @@ st.session_state.setdefault("discover_status", "")
 # Sidebar: Global Spatiotemporal Controls & Live Data Provenance
 # ---------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("### :material/air: VayuDrishti Mumbai")
+    st.markdown("### :material/air: वायुदृष्टि VayuDrishti Mumbai")
     st.caption(
-        "**Mumbai AirPulse AI** — Spatiotemporal Urban Air Intelligence & Civic Decision Support "
+        "**VayuDrishti Mumbai** — Spatiotemporal Urban Air Intelligence & Civic Decision Support "
         "built for **Google × Zindi × ClimateVerse**."
     )
 
@@ -283,7 +284,7 @@ facilities_df = snapshot["facilities_df"]
 # ---------------------------------------------------------------------------
 # Hero Header & Top-Level KPI Cards
 # ---------------------------------------------------------------------------
-st.title(":material/air: VayuDrishti Mumbai (Mumbai AirPulse AI)")
+st.title(":material/air: वायुदृष्टि VayuDrishti Mumbai")
 st.markdown(
     "**Hyperlocal 100m Wind-Advected Air Quality Kriging, Conformal Multi-Horizon Forecasting & "
     "Google Gemini 4 Argon + LiteLLM Civic Decision-Support across Mumbai's 24 BMC Wards**  \n"

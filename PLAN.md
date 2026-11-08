@@ -1,7 +1,8 @@
 # Operational Execution & Competition Runbook (`PLAN.md`)
 
-**Project:** Google Mumbai Air Quality Forecasting Challenge & VayuDrishti Mumbai (`2026`)  
-**Current Date:** Saturday, Nov 7, 2026 (IST, `UTC+05:30`)
+**Project:** **वायुदृष्टि VayuDrishti (`VayuDrishti Mumbai`)** — Google Mumbai Air Quality Forecasting Challenge (`2026`)  
+**Repository:** [`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti)  
+**Current Date:** Monday, Nov 9, 2026 (IST, `UTC+05:30`)
 
 ---
 

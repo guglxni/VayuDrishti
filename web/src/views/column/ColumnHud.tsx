@@ -2,11 +2,12 @@ import { ArrowUp } from 'lucide-react'
 import type { TwinData } from '../../data/types'
 import { pmColor } from '../../lib/aqi'
 import { stationPM } from '../../lib/series'
-import { TARGET_IDS, TARGET_META } from '../../lib/stations'
+import type { FluxEdge } from '../../lib/physics'
+import { stationName, TARGET_IDS, TARGET_META } from '../../lib/stations'
 import { useTwin } from '../../state/store'
 import { AqiChip, AqiLegend, cx, Eyebrow, PmValue, Stat } from '../../ui/primitives'
 import { ColumnChart } from './ColumnChart'
-import { fmtInt, TIME_LAPSE, type ColumnState } from './derive'
+import { fmtInt, TIME_LAPSE, verticalProfileFraction, type ColumnState } from './derive'
 
 function StationPicker({ data, hour, stationId }: { data: TwinData; hour: number; stationId: number }) {
   const setStation = useTwin((s) => s.setStation)
@@ -38,9 +39,49 @@ function StationPicker({ data, hour, stationId }: { data: TwinData; hour: number
   )
 }
 
-export function ColumnHud({ data, st, stationId }: { data: TwinData; st: ColumnState; stationId: number }) {
+function TransportRow({
+  label,
+  edge,
+  peerId,
+  nameFor,
+}: {
+  label: string
+  edge: FluxEdge | null
+  peerId: number | undefined
+  nameFor: (id: number) => string
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 text-2xs">
+      <div className="min-w-0">
+        <div className="text-faint">{label}</div>
+        <div className={cx('mt-0.5 truncate text-[12px]', edge ? 'text-paper' : 'text-faint')}>
+          {peerId != null ? nameFor(peerId) : 'No active transport edge'}
+        </div>
+      </div>
+      {edge && (
+        <div className="shrink-0 text-right font-cond tnum">
+          <div className="text-[15px] font-medium text-wind">{edge.flux.toFixed(1)}</div>
+          <div className="text-[10px] text-faint">{edge.km.toFixed(1)} km</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export function ColumnHud({ data, st, stationId, fluxes }: { data: TwinData; st: ColumnState; stationId: number; fluxes: FluxEdge[] }) {
   const { met } = st
   const ventHint = st.dayVentPeak && met.vent != null ? `Best today ${fmtInt(st.dayVentPeak.value)} at ${st.dayVentPeak.time}` : 'Mixing height × wind speed'
+  const incoming = fluxes.find((edge) => edge.dst === stationId) ?? null
+  const outgoing = fluxes.find((edge) => edge.src === stationId) ?? null
+  const nameFor = (id: number) => {
+    const station = data.stations.stations.find((s) => s.id === id)
+    return station ? stationName(station) : (TARGET_META[id]?.name ?? String(id))
+  }
+  const lidM = Math.max(1, met.pblh ?? 400)
+  const stratification = 1 + 0.9 * (1 - Math.max(0, Math.min(1, (met.sw ?? 0) / 700)))
+  const surfaceFraction = verticalProfileFraction(0, lidM, stratification)
+  const lidFraction = verticalProfileFraction(lidM, lidM, stratification)
+  const trappingRatio = lidFraction > 0 ? surfaceFraction / lidFraction : null
   return (
     <div
       className="panel absolute left-5 top-20 z-10 flex w-[340px] flex-col overflow-hidden"
@@ -120,6 +161,31 @@ export function ColumnHud({ data, st, stationId }: { data: TwinData; st: ColumnS
         <div className="mt-3 flex items-baseline gap-2 text-2xs">
           <span className="text-faint">Air pattern</span>
           <span className="text-paper/85">{st.regime}</span>
+        </div>
+
+        <div className="mt-4 border-t border-line pt-3">
+          <div className="flex items-baseline justify-between gap-2">
+            <Eyebrow>AirPhyNet transport</Eyebrow>
+            <span className="font-mono text-[10px] text-faint">µg/m²/s</span>
+          </div>
+          <div className="mt-2 space-y-2">
+            <TransportRow label="Strongest incoming" edge={incoming} peerId={incoming?.src} nameFor={nameFor} />
+            <TransportRow label="Strongest outgoing" edge={outgoing} peerId={outgoing?.dst} nameFor={nameFor} />
+          </div>
+          <div className="mt-3 flex items-end justify-between gap-3 border-t border-line pt-2.5">
+            <div>
+              <div className="text-2xs text-faint">Illustrative profile · fixed C_surface / C_lid</div>
+              <div className="mt-0.5 text-[10px] leading-relaxed text-mute">Model shape uses a fixed 35% drawdown at the lid.</div>
+              <div className="mt-0.5 text-[10px] leading-relaxed text-mute">
+                {st.pm != null
+                  ? `Surface ${(st.pm * surfaceFraction).toFixed(1)} · lid ${(st.pm * lidFraction).toFixed(1)} µg/m³`
+                  : 'Normalised vertical profile · PM2.5 unavailable'}
+              </div>
+            </div>
+            <div className="shrink-0 font-cond text-[24px] font-semibold leading-none tnum text-wind">
+              {trappingRatio != null ? `${trappingRatio.toFixed(2)}×` : '—'}
+            </div>
+          </div>
         </div>
 
         <div className="mt-4 border-t border-line pt-3">

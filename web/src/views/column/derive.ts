@@ -62,6 +62,15 @@ export function fmtRatio(r: number): string {
   return r >= 10 ? `${Math.round(r)}×` : `${r.toFixed(1)}×`
 }
 
+/** Normalised vertical PM2.5 profile C(z) / C0, with a sharp change at the mixing lid. */
+export function verticalProfileFraction(zM: number, lidM: number, stratification: number): number {
+  const z = Math.max(0, zM)
+  const lid = Math.max(1, lidM)
+  if (z <= lid) return Math.max(0, 1 - 0.35 * Math.pow(z / lid, Math.max(0.1, stratification)))
+  // The clean free troposphere decays over four scene units (400 m) above the inversion.
+  return 0.12 * Math.exp(-(z - lid) / (4 * M_PER_UNIT))
+}
+
 export interface HourMet {
   pblh: number | null
   u: number | null

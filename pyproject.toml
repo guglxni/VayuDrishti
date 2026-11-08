@@ -1,7 +1,7 @@
 [project]
-name = "google-mumbai-air-quality"
+name = "vayudrishti"
 version = "0.1.0"
-description = "Hourly PM2.5 forecasts for the 2026 Google Mumbai Air Quality Data Challenge"
+description = "VayuDrishti (वायुदृष्टि) — Hourly PM2.5 Forecasting & 3D Atmospheric Digital Twin for the 2026 Google Mumbai Air Quality Data Challenge"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

@@ -1,8 +1,9 @@
-# Google Mumbai Air Quality Data Challenge (2026)
+# वायुदृष्टि VayuDrishti — Google Mumbai Air Quality Data Challenge (2026)
 
-Zindi × Google × Beyond × ClimateVerse. This repository forecasts hourly PM2.5 for four Mumbai CPCB stations and includes the Streamlit app submitted for the creative track.
+Zindi × Google × Beyond × ClimateVerse. **VayuDrishti (`वायुदृष्टि — VayuDrishti Mumbai`)** forecasts hourly PM2.5 for four Mumbai CPCB stations (`Track 1`) and powers a 3D WebGL Atmospheric Digital Twin (`web/`) plus a 4-tab Streamlit Civic Intelligence Platform (`app/mumbai_airpulse_app.py`) (`Track 2`).
 
-Competition page: [google-mumbai-data-challenge](https://zindi.africa/competitions/google-mumbai-data-challenge).
+- **Repository:** [`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti)
+- **Competition page:** [`google-mumbai-data-challenge`](https://zindi.africa/competitions/google-mumbai-data-challenge)
 
 ## Tracks
 
@@ -17,9 +18,13 @@ Stations:
 | 3409510 | Byculla |
 | 3409511 | Shivaji Nagar |
 
-**Track 2 — most creative submission ($500).** [VayuDrishti Mumbai (Mumbai AirPulse AI)](app/mumbai_airpulse_app.py) is a four-tab Streamlit app: ward-level air-quality maps, conformal forecast ranges, a UDISE+ school and BMC hospital audit, and a Gemini 2.5 Flash GRAP copilot.
+**Track 2 — most creative submission ($500).** **वायुदृष्टि VayuDrishti Mumbai** is delivered in two synchronized interfaces:
+1. **[3D Atmospheric Digital Twin (`web/`)](web/README.md):** A zero-slop MapLibre GL + Deck.gl + Three.js (`@react-three/fiber`) + D3 tactical atmospheric observatory across `City map` (18-station 3D columns, 24 BMC ward choropleths, 900 animated wind streamlines, and directed `AirPhyNet` advection flux arcs), `Air column` (3D vertical PBLH inversion lid, 5,200 aerosol particles, Deonar/highway source plume cones, and vertical concentration profile $C(z)$), `Forecast` (`TimesFM 3.0` 9-decile & `Chronos-2` 21-quantile fans, `TimeMixer` synoptic-diurnal wave decomposition, Hampel glitch inspector, and `AnEn` analog matcher), and `Ward actions` (multi-criteria ward risk ranking, 92-dataset ClimateVerse catalog explorer, and live multi-provider BMC GRAP copilot).
+2. **[Streamlit Civic Intelligence App (`app/mumbai_airpulse_app.py`)](app/mumbai_airpulse_app.py):** Four-tab Python dashboard with anisotropic wind-advected kriging, conformal forecast bands, UDISE+ school and BMC hospital exposure audits, and a Gemini / LiteLLM GRAP copilot.
 
-`web/` is a paused, incomplete UI redesign. Track 2 is the Streamlit app above.
+> **Brihanmumbai (BMC) vs. Greater MMR Airshed Branches:**
+> - **`main` branch (canonical competition scope):** Strictly models the **4 scored CPCB target stations**, **14 auxiliary BMC stations**, and **24 BMC administrative wards** (`Wards A–T`).
+> - **`mmr-extended` branch ([`tree/mmr-extended`](https://github.com/guglxni/VayuDrishti/tree/mmr-extended)):** Extends the 3D digital twin across the full **34-station Mumbai Metropolitan Region (MMR)** by adding the **16 surrounding MPCB CAAQMS satellite monitors** (`Thane`, `Navi Mumbai — Mahape, Vashi, Sanpada, Nerul, CBD Belapur, Taloja, Kalamboli/Panvel`, `Mira-Bhayandar`, `Vasai-Virar`, `Bhiwandi`, `Kalyan`, `Ulhasnagar`, `Badlapur`) from `XKDR_All_Stations.csv` & `Kaggle_All_Stations.csv` with a continuous MMR surface and trans-boundary creek/industrial plume advection.
 
 ## Eight-model stack
 
@@ -61,10 +66,14 @@ uv run python src/validation.py && uv run python src/ensemble.py && uv run pytho
 
 `src/fetch_data.py` loads the Zindi/Hugging Face challenge files (`han-jisso/google-mumbai-air-quality-challenge`), Open-Meteo weather and CAMS, VABB METAR, and the ClimateVerse catalog. Zindi credentials stay in the environment (`ZINDI_USERNAME`, `ZINDI_PASSWORD`, or a Zindi token). They are not stored in this repository.
 
-Track 2:
+Track 2 (Streamlit app & 3D WebGL Digital Twin):
 
 ```bash
+# Streamlit civic platform
 uv run streamlit run app/mumbai_airpulse_app.py
+
+# 3D WebGL / MapLibre / Three.js digital twin (http://127.0.0.1:5179)
+cd web && npm run dev
 ```
 
 Notebooks for a Colab T4 review: `notebooks/Mumbai_Winning_Colab.ipynb` and `notebooks/Mumbai_Winning_Solution.ipynb`.
@@ -90,9 +99,9 @@ All timestamps are `Asia/Kolkata` (UTC+05:30). In `Train.csv`, `timestamp_ist` i
 | Path | Contents |
 | :--- | :--- |
 | `src/` | Fetch, validation, features, eight models, ensemble, submission |
-| `app/` | Track 2 Streamlit app |
+| `app/` | Track 2 Streamlit civic intelligence app (`VayuDrishti Mumbai`) |
 | `notebooks/` | Self-contained Colab notebooks |
-| `web/` | Paused, incomplete UI redesign |
+| `web/` | Track 2 3D WebGL / MapLibre / Deck.gl / Three.js atmospheric digital twin (`वायुदृष्टि VayuDrishti`) |
 | `data/processed/` | Small OOF leaderboards and ensemble weights. Raw and external inputs are fetched, not committed |
 | `external_repos/` | Local clones of reference projects. Gitignored. Clone commands are in `FOSS_GH_CLI_GUIDE.md` |
 | `.aidlc/` | AI-DLC notes (inception, ADRs, verification) |

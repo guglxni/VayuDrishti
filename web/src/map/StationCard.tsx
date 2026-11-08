@@ -1,7 +1,7 @@
 import { ArrowRight, Navigation } from 'lucide-react'
 import { useData, useTwin } from '../state/store'
 import { pmColor } from '../lib/aqi'
-import { REGIME_LABEL, cityMet } from '../lib/physics'
+import { REGIME_LABEL, cityMet, fluxEdges } from '../lib/physics'
 import { fmt, sampleAt, stationPM } from '../lib/series'
 import { istParts, stationName, TARGET_META, targetStations } from '../lib/stations'
 import { AqiChip, Button, cx, PmValue } from '../ui/primitives'
@@ -45,6 +45,11 @@ export function StationCard() {
   const fromDeg = ((Math.atan2(-u, -v) * 180) / Math.PI + 360) % 360
   const pblh = sampleAt(wp?.pblh, hour)
   const met = cityMet(data, hour)
+  const incoming = fluxEdges(data, hour).find((edge) => edge.dst === stationId)
+  const incomingSource = incoming ? data.stations.stations.find((s) => s.id === incoming.src) : undefined
+  const cams = sampleAt(fc.cams, hour)
+  const ensemble = sampleAt(fc.models.ensemble, hour)
+  const camsDelta = cams != null && ensemble != null ? ensemble - cams : null
 
   return (
     <aside className="panel absolute left-5 top-20 z-10 w-[340px] overflow-hidden" aria-label="Selected station">
@@ -97,6 +102,31 @@ export function StationCard() {
               {fmt(pblh, 0)}
               <span className="ml-1 font-sans text-2xs text-mute">m</span>
             </div>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-[1.35fr_1fr] gap-3 border-t border-line pt-3">
+          <div>
+            <div className="text-2xs text-faint">Top incoming AirPhyNet flux</div>
+            {incoming && incomingSource ? (
+              <>
+                <div className="mt-0.5 truncate text-xs text-paper" title={stationName(incomingSource)}>
+                  {stationName(incomingSource)} <span className="text-faint">→ here</span>
+                </div>
+                <div className="font-cond text-[16px] font-medium tnum text-wind">
+                  {incoming.flux.toFixed(1)} <span className="font-sans text-2xs text-mute">µg/m²/s · {incoming.km.toFixed(1)} km</span>
+                </div>
+              </>
+            ) : (
+              <div className="mt-1 text-xs text-mute">No incoming edge</div>
+            )}
+          </div>
+          <div>
+            <div className="text-2xs text-faint">Ensemble − CAMS</div>
+            <div className="font-cond text-[17px] font-medium tnum">
+              {camsDelta == null ? '—' : `${camsDelta >= 0 ? '+' : ''}${camsDelta.toFixed(1)}`}
+              <span className="ml-1 font-sans text-2xs text-mute">µg/m³</span>
+            </div>
+            <div className="mt-0.5 text-2xs text-faint">CAMS {fmt(cams)} · Ens {fmt(ensemble)}</div>
           </div>
         </div>
         <p className="mt-3 text-xs text-mute">{REGIME_LABEL[met.regime] ?? met.regime}</p>

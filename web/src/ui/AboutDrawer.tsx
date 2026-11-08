@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { ExternalLink, Search, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { BenchmarkStrip } from '../views/forecast/BenchmarkStrip'
 import { useData, useTwin } from '../state/store'
-import { cx, Segmented } from './primitives'
+import { CatalogExplorer } from './CatalogExplorer'
+import { Segmented } from './primitives'
 
 const MODEL_ROWS: { key: string; weightKey: string; plain: string }[] = [
   { key: 'm1_calibrated_cams_prior', weightKey: 'm1_calibrated_cams_prior', plain: 'Daily rhythm + calibrated CAMS chemistry forecast' },
@@ -85,7 +87,6 @@ function DrawerBody({ onClose }: { onClose: () => void }) {
   const w24 = meta.ensemble_weights.gap24h
   const w72 = meta.ensemble_weights.gap72h
   const lb = new Map(meta.leaderboard.map((r) => [r.key, r]))
-  const rf = lb.get('b1_starter_rf_90d')
 
   return (
     <>
@@ -117,19 +118,10 @@ function DrawerBody({ onClose }: { onClose: () => void }) {
         {tab === 'model' ? (
           <div className="space-y-8">
             <section>
-              <div className="grid grid-cols-2 gap-4">
-                <Metric value={w24.oof_rmse_after_shrinkage} label="Typical error, 24 h reporting gap" />
-                <Metric value={w72.oof_rmse_after_shrinkage} label="Typical error, 72 h reporting gap" />
-              </div>
-              <p className="mt-3 text-xs text-mute">
-                Out-of-fold RMSE in µg/m³ across five rolling folds, Oct 12–21 2026.
-                {rf && (
-                  <>
-                    {' '}
-                    The challenge's starter random forest scores {rf.rmse24.toFixed(2)} on the same folds, so the blend cuts error by{' '}
-                    {Math.round((1 - w24.oof_rmse_after_shrinkage / rf.rmse24) * 100)}%.
-                  </>
-                )}
+              <BenchmarkStrip compact />
+              <p className="mt-3 text-xs leading-relaxed text-mute">
+                Exact verified competition metrics. OOF errors are measured against raw sensor readings in µg/m³; the 24h and 72h
+                benchmarks use five rolling post-monsoon folds, Oct 12–21 2026.
               </p>
             </section>
 
@@ -212,23 +204,10 @@ function DrawerBody({ onClose }: { onClose: () => void }) {
             </section>
           </div>
         ) : (
-          <Catalog />
+          <CatalogExplorer />
         )}
       </div>
     </>
-  )
-}
-
-function Metric({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="panel-solid px-4 py-3">
-      <div className="flex items-baseline gap-1.5">
-        <span className="font-cond text-[40px] font-semibold leading-none tnum">{value.toFixed(2)}</span>
-        <span className="text-xs text-mute">µg/m³</span>
-      </div>
-      <div className="mt-1.5 text-2xs text-mute">{label}</div>
-      <div className="font-mono text-[10px] text-faint tnum">{value.toFixed(4)}</div>
-    </div>
   )
 }
 
@@ -239,68 +218,6 @@ function WeightBar({ v }: { v: number }) {
         <div className="h-full rounded-full bg-paper/70" style={{ width: `${Math.min(100, v * 100)}%` }} />
       </div>
       <span className="w-7 text-right font-cond text-xs tnum text-mute">{Math.round(v * 100)}%</span>
-    </div>
-  )
-}
-
-function Catalog() {
-  const data = useData()
-  const [q, setQ] = useState('')
-  const [onlyUsed, setOnlyUsed] = useState(true)
-  const rows = useMemo(() => {
-    const t = q.trim().toLowerCase()
-    return data.catalog.datasets
-      .filter((d) => (!onlyUsed || d.integrated) && (!t || `${d.name} ${d.description} ${d.doi} ${d.category}`.toLowerCase().includes(t)))
-      .sort((a, b) => Number(b.integrated) - Number(a.integrated))
-  }, [data, q, onlyUsed])
-
-  return (
-    <div>
-      <p className="text-[13px] text-mute">
-        {data.catalog.meta.integrated} of {data.catalog.meta.count} ClimateVerse India datasets feed the forecasts and the ward tools.
-      </p>
-      <div className="mt-3 flex items-center gap-2">
-        <label className="flex flex-1 items-center gap-2 rounded-[10px] border border-line bg-ink px-3 py-1.5">
-          <Search size={14} className="text-faint" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search datasets"
-            className="w-full bg-transparent text-[13px] text-paper placeholder:text-faint focus:outline-none"
-          />
-        </label>
-        <Segmented
-          size="sm"
-          value={onlyUsed ? 'used' : 'all'}
-          onChange={(v) => setOnlyUsed(v === 'used')}
-          options={[
-            { value: 'used', label: 'Used' },
-            { value: 'all', label: 'All' },
-          ]}
-        />
-      </div>
-      <ul className="mt-4 divide-y divide-line">
-        {rows.map((d) => (
-          <li key={d.doi} className="py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className={cx('text-[13px] leading-snug', d.integrated ? 'text-paper' : 'text-mute')}>{d.name}</div>
-                <div className="mt-0.5 text-2xs text-faint">{d.curated_category ?? d.category}</div>
-              </div>
-              <a
-                href={d.url}
-                target="_blank"
-                rel="noreferrer"
-                className="flex shrink-0 items-center gap-1 font-mono text-[10px] text-mute hover:text-paper"
-              >
-                {d.doi.replace('doi:', '')} <ExternalLink size={11} />
-              </a>
-            </div>
-            {d.role && <p className="mt-1 text-xs text-mute">{d.role}</p>}
-          </li>
-        ))}
-        {rows.length === 0 && <li className="py-6 text-center text-[13px] text-mute">No datasets match “{q}”. Try a broader word such as “wind” or “school”.</li>}
-      </ul>
     </div>
   )
 }

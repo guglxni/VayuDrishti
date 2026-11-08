@@ -2,9 +2,22 @@ import { useEffect, useLayoutEffect, useMemo, useRef, type ReactNode, type RefOb
 import { useFrame, useThree } from '@react-three/fiber'
 import { Html, Line, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
-import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
+import type { OrbitControls as OrbitControlsImpl, Line2, LineSegments2 } from 'three-stdlib'
+import type { Station } from '../../data/types'
+import type { FluxEdge } from '../../lib/physics'
 import { buildCity, GROUND_R, type CityInput, type CityLayout } from './city'
-import { AXIS_TICKS_M, bearingVec, COL_R, DRIFT_PER_MS, fmtInt, M_PER_UNIT, TILE_R, type NearbySource, type SceneTargets } from './derive'
+import {
+  AXIS_TICKS_M,
+  bearingVec,
+  COL_R,
+  DRIFT_PER_MS,
+  fmtInt,
+  M_PER_UNIT,
+  TILE_R,
+  verticalProfileFraction,
+  type NearbySource,
+  type SceneTargets,
+} from './derive'
 import {
   COLUMN_VERT,
   DISC_VERT,
@@ -25,6 +38,13 @@ const WIND = new THREE.Vector3(207 / 255, 227 / 255, 242 / 255)
 const N_PARTICLES = 5200
 const N_CLEAN = 700
 const TOP_U = 32
+const PROFILE_GRID_POINTS = 65
+const PROFILE_POINTS = PROFILE_GRID_POINTS + 2
+const PROFILE_TOP_U = AXIS_TICKS_M[AXIS_TICKS_M.length - 1] / M_PER_UNIT
+const PROFILE_STEP_HALF_WIDTH_U = 0.01
+// Keep HTML label teardown independent of the R3F canvas container on view changes.
+const HTML_PORTAL = { current: document.body }
+const UP = new THREE.Vector3(0, 1, 0)
 
 /** Smoothed scene state, advanced once per frame by <Driver>. */
 interface Cur {
@@ -656,6 +676,69 @@ function WindStreaks({ cur }: { cur: Cur }) {
   return <mesh geometry={geo} material={mat} frustumCulled={false} renderOrder={7} />
 }
 
+function SourcePlumes({ cur, sources }: { cur: Cur; sources: NearbySource[] }) {
+  const group = useRef<THREE.Group>(null)
+  const geometry = useMemo(() => new THREE.CylinderGeometry(1, 0.035, 1, 32, 1, true), [])
+  const material = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: '#CFE3F2',
+        transparent: true,
+        opacity: 0.09,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    [],
+  )
+  const placements = useMemo(
+    () =>
+      sources.map((source) => {
+        const [bx, bz] = bearingVec(source.bearing)
+        const distance = (source.km * 1000) / M_PER_UNIT
+        return { start: new THREE.Vector3(bx * distance, 0.4, bz * distance) }
+      }),
+    [sources],
+  )
+  const direction = useMemo(() => new THREE.Vector3(), [])
+  const centre = useMemo(() => new THREE.Vector3(), [])
+  useEffect(
+    () => () => {
+      geometry.dispose()
+      material.dispose()
+    },
+    [geometry, material],
+  )
+  useFrame(() => {
+    if (!group.current) return
+    const speed = Math.hypot(cur.u, cur.v)
+    const wx = speed > 0.02 ? cur.u / speed : 1
+    const wz = speed > 0.02 ? -cur.v / speed : 0
+    const length = 2.8 + Math.min(4.8, speed * 1.25)
+    // Reserve room for the tilted plume rim as well as its centreline below the lid.
+    const radius = Math.max(0.02, Math.min(0.34 + length * 0.09, cur.lid - 0.45))
+    const rise = Math.max(0, Math.min(cur.lid - 0.45 - radius, length * 0.18))
+    direction.set(wx, rise / length, wz).normalize()
+    material.opacity = 0.045 + 0.065 * smooth(0, 3, speed)
+    group.current.visible = sources.length > 0 && speed > 0.02 && cur.lid > 0.45
+    for (let i = 0; i < group.current.children.length; i++) {
+      const mesh = group.current.children[i]
+      const source = placements[i]
+      if (!source) continue
+      centre.copy(source.start).addScaledVector(direction, length * 0.5)
+      mesh.position.copy(centre)
+      mesh.quaternion.setFromUnitVectors(UP, direction)
+      mesh.scale.set(radius, length, radius)
+    }
+  })
+  return (
+    <group ref={group}>
+      {placements.map((_, i) => (
+        <mesh key={`${sources[i].name}-${i}`} geometry={geometry} material={material} renderOrder={2} />
+      ))}
+    </group>
+  )
+}
+
 const labelShadow = { textShadow: '0 1px 2px rgba(5,9,14,0.85), 0 0 8px rgba(5,9,14,0.6)' }
 
 function Label({ children, className }: { children: ReactNode; className?: string }) {
@@ -663,6 +746,80 @@ function Label({ children, className }: { children: ReactNode; className?: strin
     <div className={`pointer-events-none select-none whitespace-nowrap ${className ?? ''}`} style={labelShadow}>
       {children}
     </div>
+  )
+}
+
+function ConcentrationProfile({ cur }: { cur: Cur }) {
+  const profile = useRef<Line2 | LineSegments2>(null)
+  const initialPoints = useMemo<[number, number, number][]>(
+    () =>
+      Array.from({ length: PROFILE_POINTS }, (_, i) => [
+        -0.55,
+        i < PROFILE_GRID_POINTS ? (i / (PROFILE_GRID_POINTS - 1)) * PROFILE_TOP_U : 0,
+        0,
+      ]),
+    [],
+  )
+  const initialColors = useMemo<[number, number, number][]>(
+    () => Array.from({ length: PROFILE_POINTS }, () => [WIND.x, WIND.y, WIND.z]),
+    [],
+  )
+  // Reused frame buffers keep the Drei line geometry and its GPU allocations stable.
+  const xz = useMemo(() => new Float32Array(PROFILE_POINTS * 2), [])
+  const rgb = useMemo(() => new Float32Array(PROFILE_POINTS * 3), [])
+  const heights = useMemo(() => new Float32Array(PROFILE_POINTS), [])
+  useFrame(() => {
+    const line = profile.current
+    if (!line) return
+    const stratification = 1 + 0.9 * (1 - cur.conv)
+    const c0 = Math.max(0, cur.pm)
+    const lid = Math.max(0, Math.min(PROFILE_TOP_U, cur.lid))
+    for (let i = 0; i < PROFILE_GRID_POINTS; i++) {
+      heights[i] = (i / (PROFILE_GRID_POINTS - 1)) * PROFILE_TOP_U
+    }
+    heights[PROFILE_GRID_POINTS] = Math.max(0, lid - PROFILE_STEP_HALF_WIDTH_U)
+    heights[PROFILE_GRID_POINTS + 1] = Math.min(PROFILE_TOP_U, lid + PROFILE_STEP_HALF_WIDTH_U)
+    heights.sort()
+    for (let i = 0; i < PROFILE_POINTS; i++) {
+      const z = heights[i]
+      const fraction = verticalProfileFraction(z * M_PER_UNIT, cur.lid * M_PER_UNIT, stratification)
+      const concentration = c0 * fraction
+      const color = z <= lid ? cur.rgb : WIND
+      xz[i * 2] = -0.55 - 2.5 * (concentration / Math.max(1, c0))
+      xz[i * 2 + 1] = z
+      rgb[i * 3] = color.x
+      rgb[i * 3 + 1] = color.y
+      rgb[i * 3 + 2] = color.z
+    }
+    const start = line.geometry.getAttribute('instanceStart')
+    const end = line.geometry.getAttribute('instanceEnd')
+    const colorStart = line.geometry.getAttribute('instanceColorStart')
+    const colorEnd = line.geometry.getAttribute('instanceColorEnd')
+    for (let i = 0; i < PROFILE_POINTS - 1; i++) {
+      start.setXYZ(i, xz[i * 2], xz[i * 2 + 1], 0)
+      end.setXYZ(i, xz[i * 2 + 2], xz[i * 2 + 3], 0)
+      colorStart.setXYZ(i, rgb[i * 3], rgb[i * 3 + 1], rgb[i * 3 + 2])
+      colorEnd.setXYZ(i, rgb[i * 3 + 3], rgb[i * 3 + 4], rgb[i * 3 + 5])
+    }
+    start.needsUpdate = true
+    colorStart.needsUpdate = true
+  })
+  return (
+    <>
+      <Line
+        ref={profile}
+        points={initialPoints}
+        vertexColors={initialColors}
+        color="#FFFFFF"
+        lineWidth={1.8}
+        transparent
+        opacity={0.95}
+        frustumCulled={false}
+      />
+      <Html portal={HTML_PORTAL} position={[-3.1, PROFILE_TOP_U - 0.5, 0]} center zIndexRange={[5, 0]} pointerEvents="none">
+        <Label className="font-mono text-[9px] text-paper/60">PM2.5 C(z)</Label>
+      </Html>
+    </>
   )
 }
 
@@ -720,14 +877,15 @@ function Annotations({ cur, lidText, peakText }: { cur: Cur; lidText: string; pe
     <>
       <group ref={axis}>
         <lineSegments geometry={axisGeo} material={axisMat} />
+        <ConcentrationProfile cur={cur} />
         {AXIS_TICKS_M.map((m) => (
-          <Html key={m} position={[-0.6, m / M_PER_UNIT, 0]} zIndexRange={[5, 0]} pointerEvents="none" style={{ transform: 'translate(-100%, -50%)' }}>
+          <Html portal={HTML_PORTAL} key={m} position={[-0.6, m / M_PER_UNIT, 0]} zIndexRange={[5, 0]} pointerEvents="none" style={{ transform: 'translate(-100%, -50%)' }}>
             <Label className="font-mono text-[10px] tnum text-paper/70">{m === 0 ? 'Ground' : `${fmtInt(m)} m`}</Label>
           </Html>
         ))}
       </group>
       <group ref={lidLabel}>
-        <Html zIndexRange={[6, 0]} pointerEvents="none" style={{ transform: 'translate(10px, -50%)' }}>
+        <Html portal={HTML_PORTAL} zIndexRange={[6, 0]} pointerEvents="none" style={{ transform: 'translate(10px, -50%)' }}>
           <Label className="flex items-center gap-2">
             <span className="h-px w-5 bg-paper/70" />
             <span className="text-[12px] font-medium text-paper">{lidText}</span>
@@ -738,7 +896,7 @@ function Annotations({ cur, lidText, peakText }: { cur: Cur; lidText: string; pe
         <Line points={circle} color="#ECE7DC" lineWidth={1} dashed dashSize={0.35} gapSize={0.3} transparent opacity={0.4} />
         <group ref={peakLabel}>
           {peakText && (
-            <Html zIndexRange={[5, 0]} pointerEvents="none" style={{ transform: 'translate(10px, -50%)' }}>
+            <Html portal={HTML_PORTAL} zIndexRange={[5, 0]} pointerEvents="none" style={{ transform: 'translate(10px, -50%)' }}>
               <Label className="text-[11px] text-paper/60">{peakText}</Label>
             </Html>
           )}
@@ -773,17 +931,17 @@ function GroundMarks({ city, sources }: { city: CityLayout; sources: NearbySourc
       <mesh position={[0, 0.62, 0]} material={pinMat}>
         <sphereGeometry args={[0.08, 16, 12]} />
       </mesh>
-      <Html position={north} center zIndexRange={[5, 0]} pointerEvents="none">
+      <Html portal={HTML_PORTAL} position={north} center zIndexRange={[5, 0]} pointerEvents="none">
         <Label className="font-mono text-[11px] font-medium text-paper/80">N</Label>
       </Html>
       <mesh position={[0, 0.04, -(TILE_R + 0.35)]} rotation-x={-Math.PI / 2} material={pinMat}>
         <circleGeometry args={[0.12, 3]} />
       </mesh>
-      <Html position={[0, 0.05, TILE_R + 0.9]} center zIndexRange={[5, 0]} pointerEvents="none">
+      <Html portal={HTML_PORTAL} position={[0, 0.05, TILE_R + 0.9]} center zIndexRange={[5, 0]} pointerEvents="none">
         <Label className="font-mono text-[10px] text-paper/50">1 km</Label>
       </Html>
       {seaPos && (
-        <Html position={seaPos} center zIndexRange={[5, 0]} pointerEvents="none">
+        <Html portal={HTML_PORTAL} position={seaPos} center zIndexRange={[5, 0]} pointerEvents="none">
           <Label className="text-[11px] italic text-paper/55">Arabian Sea</Label>
         </Html>
       )}
@@ -798,7 +956,7 @@ function GroundMarks({ city, sources }: { city: CityLayout; sources: NearbySourc
             <mesh position-y={0.9} material={srcMat}>
               <cylinderGeometry args={[0.015, 0.015, 1.8, 6]} />
             </mesh>
-            <Html position={[0, 1.9, 0]} center zIndexRange={[5, 0]} pointerEvents="none">
+            <Html portal={HTML_PORTAL} position={[0, 1.9, 0]} center zIndexRange={[5, 0]} pointerEvents="none">
               <Label className="text-center text-[11px] leading-tight text-paper/75">
                 {s.name}
                 <span className="block font-mono text-[10px] text-paper/45">{s.km.toFixed(1)} km</span>
@@ -808,6 +966,95 @@ function GroundMarks({ city, sources }: { city: CityLayout; sources: NearbySourc
         )
       })}
     </>
+  )
+}
+
+function FluxVectors({ stationId, fluxes, stations }: { stationId: number; fluxes: FluxEdge[]; stations: Station[] }) {
+  const headGeometry = useMemo(() => new THREE.ConeGeometry(0.18, 0.52, 12), [])
+  const headMaterial = useMemo(
+    () => new THREE.MeshBasicMaterial({ color: '#CFE3F2', transparent: true, opacity: 0.78, depthWrite: false }),
+    [],
+  )
+  useEffect(
+    () => () => {
+      headGeometry.dispose()
+      headMaterial.dispose()
+    },
+    [headGeometry, headMaterial],
+  )
+  const ring = useMemo<[number, number, number][]>(
+    () =>
+      Array.from({ length: 129 }, (_, i) => {
+        const angle = (i / 128) * Math.PI * 2
+        return [Math.sin(angle) * TILE_R, 0.08, -Math.cos(angle) * TILE_R]
+      }),
+    [],
+  )
+  const vectors = useMemo(() => {
+    const selected = stations.find((station) => station.id === stationId)
+    if (!selected) return []
+    return fluxes.flatMap((edge) => {
+      const incoming = edge.dst === stationId
+      if (!incoming && edge.src !== stationId) return []
+      const otherId = incoming ? edge.src : edge.dst
+      const other = stations.find((station) => station.id === otherId)
+      if (!other) return []
+      const east = (other.lon - selected.lon) * Math.cos(((other.lat + selected.lat) * Math.PI) / 360)
+      const north = other.lat - selected.lat
+      const bearing = (Math.atan2(east, north) * 180) / Math.PI
+      const [bx, bz] = bearingVec(bearing)
+      const outer: [number, number, number] = [bx * TILE_R, 0.16, bz * TILE_R]
+      const inner: [number, number, number] = [bx * (COL_R + 0.9), 0.16, bz * (COL_R + 0.9)]
+      const start = incoming ? outer : inner
+      const end = incoming ? inner : outer
+      const dx = end[0] - start[0]
+      const dz = end[2] - start[2]
+      const length = Math.hypot(dx, dz)
+      const direction = new THREE.Vector3(dx / length, 0, dz / length)
+      const headScale = 0.8 + Math.min(0.8, edge.flux / 150)
+      const headLength = 0.52 * headScale
+      return [
+        {
+          key: `${edge.src}-${edge.dst}`,
+          start,
+          end,
+          head: [end[0] - direction.x * headLength * 0.5, end[1], end[2] - direction.z * headLength * 0.5] as [
+            number,
+            number,
+            number,
+          ],
+          quaternion: new THREE.Quaternion().setFromUnitVectors(UP, direction),
+          headScale,
+          lineWidth: 1.2 + Math.min(3, edge.flux / 25),
+          opacity: 0.4 + Math.min(0.5, edge.flux / 100),
+        },
+      ]
+    })
+  }, [stationId, fluxes, stations])
+  return (
+    <group>
+      <Line points={ring} color="#CFE3F2" lineWidth={0.7} transparent opacity={0.2} />
+      {vectors.map((vector) => (
+        <group key={vector.key}>
+          <Line
+            points={[vector.start, vector.end]}
+            color="#CFE3F2"
+            lineWidth={vector.lineWidth}
+            transparent
+            opacity={vector.opacity}
+            depthWrite={false}
+          />
+          <mesh
+            geometry={headGeometry}
+            material={headMaterial}
+            position={vector.head}
+            quaternion={vector.quaternion}
+            scale={vector.headScale}
+            renderOrder={8}
+          />
+        </group>
+      ))}
+    </group>
   )
 }
 
@@ -877,14 +1124,18 @@ export function ColumnScene({
   targets,
   cityInput,
   stationId,
+  stations,
   sources,
+  fluxes,
   lidText,
   peakText,
 }: {
   targets: RefObject<SceneTargets>
   cityInput: CityInput
   stationId: number
+  stations: Station[]
   sources: NearbySource[]
+  fluxes: FluxEdge[]
   lidText: string
   peakText: string | null
 }) {
@@ -904,6 +1155,8 @@ export function ColumnScene({
       <Buildings city={city} stationKey={stationId} />
       <Trees city={city} />
       <GroundMarks city={city} sources={sources} />
+      <SourcePlumes cur={cur} sources={sources} />
+      <FluxVectors stationId={stationId} fluxes={fluxes} stations={stations} />
       <Column cur={cur} />
       <Particles cur={cur} />
       <Particles cur={cur} clean />

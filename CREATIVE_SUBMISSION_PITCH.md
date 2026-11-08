@@ -1,5 +1,6 @@
-# VayuDrishti Mumbai (Mumbai AirPulse AI) — Finalist Pitch Deck & Most Creative Submission Text
+# वायुदृष्टि VayuDrishti (`VayuDrishti Mumbai`) — Finalist Pitch Deck & Most Creative Submission Text
 
+**Repository:** [`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti)  
 **Competition:** Zindi × Google × Beyond × ClimateVerse — *Google Mumbai Air Quality Data Challenge (2026)*  
 **Award Track:** **$500 USD Most Creative Submission Award**  
 **Judges:** Google Research / Google India, Zindi, Beyond, and ClimateVerse (XKDR Forum / IIT Bombay)
@@ -9,7 +10,7 @@
 ## PART 1: Ready-to-Paste Zindi / Google Form Submission Text
 
 ### 1.1 Project Title
-**VayuDrishti Mumbai (`Mumbai AirPulse AI`): Physics-Guided Foundation Quantile Forecasting (`TimesFM 3.0` + `Chronos-2`), 100m `AlphaEarth` Wind-Advected Kriging & `Gemini 4 Argon` + LiteLLM Civic GRAP Decision-Support Across Mumbai's 24 BMC Wards**
+**वायुदृष्टि VayuDrishti (`VayuDrishti Mumbai`): 3D WebGL Atmospheric Digital Twin, Physics-Guided Foundation Quantile Forecasting (`TimesFM 3.0` + `Chronos-2`), 100m `AlphaEarth` Wind-Advected Kriging & `Gemini 4 Argon` + LiteLLM Civic GRAP Decision-Support Across Mumbai's 24 BMC Wards**
 
 ### 1.2 One-Line Elevator Pitch (Under 200 Characters)
 Fusing TimesFM 3.0, AlphaEarth, Open Buildings, Gemini 4 Argon + LiteLLM, and 15 ClimateVerse DOIs into a 100m ward-level Mumbai forecast and BMC GRAP platform.

@@ -3,9 +3,9 @@ import { line } from 'd3-shape'
 import type { Forecasts, LeaderRow } from '../../data/types'
 import { cx } from '../../ui/primitives'
 import { BASELINE_SHORT, C, SHORT_MODEL, SectionHead, seriesKey, useWidth } from './shared'
+import { BenchmarkStrip } from './BenchmarkStrip'
 
 const ENSEMBLE_KEY = 'm7_stacked_ensemble'
-const STARTER_KEY = 'b1_starter_rf_90d'
 const X_DOMAIN: [number, number] = [8, 19]
 const LABEL_W = 210
 const VALUE_W = 108
@@ -40,8 +40,6 @@ export function AccuracySection({ fc }: { fc: Forecasts }) {
   const x = scaleLinear().domain(X_DOMAIN).range([8, plotW - 18]).clamp(true)
 
   const ens = rows.find((r) => r.key === ENSEMBLE_KEY)
-  const starter = rows.find((r) => r.key === STARTER_KEY)
-  const gain = ens && starter ? 1 - ens.rmse24 / starter.rmse24 : null
   const precise24 = (fc.meta.ensemble_weights.gap24h as { oof_rmse_after_shrinkage?: number } | undefined)?.oof_rmse_after_shrinkage
 
   const sparkRows = rows.filter((r) => r.key !== 'b0_station_mean_90d').flatMap((r) => r.folds24)
@@ -52,31 +50,12 @@ export function AccuracySection({ fc }: { fc: Forecasts }) {
       <SectionHead
         eyebrow="Accuracy"
         title="How far off the forecasts were, before the real test"
-        subtitle="Out-of-fold RMSE over five rolling post-monsoon folds (Oct 12–21), µg/m³. Lower is better."
-        right={
-          ens && starter && gain != null ? (
-            <div className="flex items-end gap-6">
-              <div>
-                <div className="text-2xs text-faint">Starter random forest → ensemble, 24 h ahead</div>
-                <div className="mt-0.5 flex items-baseline gap-2 font-cond tnum">
-                  <span className="text-[22px] text-mute">{starter.rmse24.toFixed(2)}</span>
-                  <span className="text-faint">→</span>
-                  <span className="text-[22px] font-semibold text-paper">{ens.rmse24.toFixed(2)}</span>
-                  <span className="text-2xs text-mute">µg/m³</span>
-                </div>
-              </div>
-              <div className="border-l border-line pl-6">
-                <div className="text-2xs text-faint">Error reduction</div>
-                <div className="mt-0.5 font-cond text-[22px] font-semibold tnum text-paper">
-                  {Math.round(gain * 100)}%
-                </div>
-              </div>
-            </div>
-          ) : null
-        }
+        subtitle="Verified competition benchmarks, followed by out-of-fold RMSE over five rolling post-monsoon folds (Oct 12–21), µg/m³. Lower is better."
       />
 
-      <div ref={ref} className="panel-solid px-4 pb-4 pt-3">
+      <BenchmarkStrip />
+
+      <div ref={ref} className="panel-solid mt-4 px-4 pb-4 pt-3">
         {/* Header / axis */}
         <div className="flex items-end gap-4 border-b border-line pb-2">
           <div style={{ width: LABEL_W }} className="shrink-0">
