@@ -1,0 +1,28 @@
+---
+description: Core anti-leakage invariants, IST timestamp alignment, 8-model ensemble architecture, and CLI verification rules for the Google Mumbai Air Quality Forecasting Challenge & VayuDrishti Mumbai.
+globs: ["**/*.py", "**/*.ipynb", "**/*.md"]
+alwaysApply: true
+---
+
+# Google Mumbai Air Quality Challenge — Cursor Agent Rules
+
+1. **Strict IST (`Asia/Kolkata`) Timestamp Alignment:**
+   - `Train.csv` `timestamp_ist` is the **END** of the 1-hour interval (`hour_end`). Always set `hour_start = hour_end - 1h`.
+   - `Test.csv` `target_start_ist` is `hour_start` and `target_end_ist` is `hour_end`.
+   - Open-Meteo (`open_meteo_weather.parquet`, `open_meteo_air_quality.parquet`) and VABB METAR (`vabb_metar_hourly.parquet`) are indexed by `target_start_ist == hour_start`.
+
+2. **Causal Anti-Leakage Gate (`hour_end <= cutoff_t0`):**
+   - For any forecast cutoff `cutoff_t0` ($T_0$), historical targets (`Train.csv`, `Other_Mumbai_Stations_2025_2026.csv.gz`) and VABB METAR observations may ONLY be accessed if `hour_end <= cutoff_t0` (`target_start_ist + 1h <= cutoff_t0`).
+   - Never use VABB METAR visibility or weather codes (`wxcodes`).
+   - Always train on `pm25_clean` (2-stage `flag_high_1000` + 7h Hampel filter) and evaluate validation RMSE against unmodified raw `pm25`.
+
+3. **Foundation Model & Ensemble Best Practices:**
+   - Always compute point forecasts from `TimesFM 3.0` (9 deciles) and `Chronos-2` (21 quantiles) using **trapezoidal quantile quadrature** ($\mathbb{E}[Y \mid X]$) for RMSE, never the median ($q_{0.50}$).
+   - For `TimesFM 3.0`, use the Compact Multi-View (`V=4` target-only + `V=12` `[4 targets + 4 CAMS + 4 log1p_vc]`, `use_znorm=False, padding_mode="edge"`).
+   - Apply $\tanh$-saturating CAMS MOS in `Model 1` and station-specific horizon-decaying variance shrinkage $\alpha_s(h_{\text{lead}})$ (correcting `Borivali East` over-dispersion).
+
+4. **macOS APFS Case-Insensitive Filesystem Guardrail:**
+   - `/Volumes/MacExt` is case-insensitive APFS. Always use uppercase canonical names for root markdown files (`ARCHITECTURE.md`, `MATH_FOUNDATIONS.md`, `FOSS_GH_CLI_GUIDE.md`, `PRD.md`, `REQUIREMENTS.md`, `PROPOSAL.md`, `DESIGN.md`, `PLAN.md`, `AGENTS.md`, `CLAUDE.md`, `SKILL.md`, `README.md`).
+
+5. **Verification Gate:**
+   - Verify all submissions (`2,592` rows, `['ID', 'Target']`, exact `SampleSubmission.csv` ID order, finite, `>= 0`) via `uv run python src/submit.py`.

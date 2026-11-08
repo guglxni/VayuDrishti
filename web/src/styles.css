@@ -1,0 +1,199 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+/*
+ * VayuDrishti design tokens.
+ * Chrome is monochrome (ink + warm paper). Hue is reserved for air quality
+ * (CPCB NAQI PM2.5 bands) and for wind (a single pale haze-blue).
+ */
+@theme {
+  --color-ink: #0a1119;
+  --color-ink-2: #0f1821;
+  --color-ink-3: #16212c;
+  --color-land: #141b22;
+  --color-paper: #ece7dc;
+  --color-mute: #9aa4af;
+  --color-faint: #5f6b78;
+  --color-line: rgb(236 231 220 / 0.09);
+  --color-line-strong: rgb(236 231 220 / 0.18);
+  --color-wind: #cfe3f2;
+
+  --color-aqi-good: #3dae6b;
+  --color-aqi-satisfactory: #a7cf4e;
+  --color-aqi-moderate: #efd143;
+  --color-aqi-poor: #f0973a;
+  --color-aqi-verypoor: #e2483f;
+  --color-aqi-severe: #b02a41;
+
+  --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-cond: "IBM Plex Sans Condensed", "IBM Plex Sans Variable", ui-sans-serif, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-deva: "Tiro Devanagari Hindi", serif;
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss02" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Floating glass panel used by every HUD element. */
+.panel {
+  background: rgb(11 17 24 / 0.8);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+  box-shadow:
+    0 1px 0 rgb(236 231 220 / 0.04) inset,
+    0 18px 48px -18px rgb(0 0 0 / 0.75);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.panel-solid {
+  background: var(--color-ink-2);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-paper);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+button {
+  cursor: pointer;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(236 231 220 / 0.12);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* MapLibre chrome restyled to match the HUD. */
+.maplibregl-ctrl-attrib {
+  background: rgb(10 17 25 / 0.6) !important;
+  color: var(--color-faint) !important;
+  font-size: 10px !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--color-mute) !important;
+}
+.maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+.maplibregl-ctrl-group {
+  background: rgb(11 17 24 / 0.82) !important;
+  border: 1px solid var(--color-line) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  overflow: hidden;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-line) !important;
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(0.9);
+}
+
+.map-root .maplibregl-ctrl-bottom-right,
+.map-root .maplibregl-ctrl-bottom-left {
+  bottom: 176px;
+  right: 12px;
+}
+
+/* Markdown documents (GRAP directives, copilot answers). */
+.prose-doc {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgb(236 231 220 / 0.86);
+}
+.prose-doc h1,
+.prose-doc h2,
+.prose-doc h3 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--color-paper);
+  margin: 0 0 0.5rem;
+  line-height: 1.35;
+}
+.prose-doc h4 {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-mute);
+  margin: 1.1rem 0 0.4rem;
+}
+.prose-doc p {
+  margin: 0.4rem 0;
+}
+.prose-doc ul {
+  margin: 0.25rem 0;
+  padding-left: 1.1rem;
+  list-style: disc;
+}
+.prose-doc li {
+  margin: 0.25rem 0;
+}
+.prose-doc li::marker {
+  color: var(--color-faint);
+}
+.prose-doc strong {
+  color: var(--color-paper);
+  font-weight: 600;
+}
+.prose-doc code {
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  color: var(--color-mute);
+  background: rgb(236 231 220 / 0.06);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

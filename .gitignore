@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.coverage
+htmlcov/
+
+# Secrets. Credentials stay in the environment.
+.env
+.env.*
+!.env.example
+*.pem
+credentials.json
+secrets.json
+secrets.toml
+.streamlit/secrets.toml
+
+# Empty local Streamlit home created by accident
+.streamlit_home/
+
+# Fetched challenge tables, Open-Meteo, CAMS, METAR, and parquet caches.
+# Recreate with: uv run python src/fetch_data.py
+data/raw/
+data/external/
+data/**/.cache/
+*.parquet
+
+# Full out-of-fold frames. Summaries stay in validation_leaderboard_*.csv.
+data/processed/oof_predictions_*
+data/processed/foundation_cache.parquet
+
+# Model checkpoints
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+checkpoints/
+wandb/
+mlruns/
+
+# Upstream clones are nested git repositories. See FOSS_GH_CLI_GUIDE.md.
+external_repos/
+
+# Paused web UI: install and build outputs
+web/node_modules/
+web/dist/
+web/tsconfig.tsbuildinfo
+web/.env
+web/.env.*
+
+# Parquet copies of submission diagnostics
+submissions/*.parquet
+
+# OS and editor junk
+.DS_Store
+.AppleDouble
+Thumbs.db
+*.swp
+*~
+*.log

@@ -1,0 +1,28 @@
+{
+  "weights": {
+    "m1_calibrated_cams_prior": 0.0336,
+    "m2_huber_ridge_gam": 0.2602,
+    "m3_lightgbm_residual": 0.0336,
+    "m4_catboost_residual": 0.0336,
+    "m5_xgboost_residual": 0.0336,
+    "m6_wind_st_gat": 0.0336,
+    "m7_timesfm3_compact": 0.0336,
+    "m8_chronos2_covariate": 0.538
+  },
+  "shrinkage_alpha": 1.02,
+  "intercept_shift": 1.2895,
+  "station_alphas": {
+    "11606": 1.02,
+    "11611": 1.02,
+    "3409510": 0.75,
+    "3409511": 1.02
+  },
+  "station_shifts": {
+    "11606": 1.5,
+    "11611": 1.3687,
+    "3409510": -0.1699,
+    "3409511": 0.7939
+  },
+  "oof_rmse_before_shrinkage": 9.5808,
+  "oof_rmse_after_shrinkage": 9.4265
+}
