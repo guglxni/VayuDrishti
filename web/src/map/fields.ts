@@ -3,9 +3,9 @@ import { pmRGB } from '../lib/aqi'
 import { windSampler } from '../lib/physics'
 import { sampleAt, stationPM } from '../lib/series'
 
-/** Geographic extent of the interpolated PM2.5 surface (covers the BMC outline). */
-export const SURFACE_BOUNDS = { west: 72.76, east: 73.01, south: 18.88, north: 19.31 }
-const GRID_W = 150
+/** Geographic extent of the interpolated PM2.5 surface (covers the Greater MMR airshed). */
+export const SURFACE_BOUNDS = { west: 72.74, east: 73.26, south: 18.87, north: 19.47 }
+const GRID_W = 220
 const GRID_H = 260
 
 /** Image corners in MapLibre `image` source order: TL, TR, BR, BL. */
@@ -42,7 +42,7 @@ function landMask(outline: [number, number][]): HTMLCanvasElement {
   c.height = GRID_H
   const ctx = c.getContext('2d')!
   const { west, east, south, north } = SURFACE_BOUNDS
-  ctx.filter = 'blur(5px)'
+  ctx.filter = 'blur(6px)'
   ctx.fillStyle = '#fff'
   ctx.beginPath()
   outline.forEach(([lon, lat], i) => {
@@ -94,7 +94,7 @@ export function renderSurface(data: TwinData, f: number, target: HTMLCanvasEleme
   }
   ctx.putImageData(img, 0, 0)
   ctx.globalCompositeOperation = 'destination-in'
-  ctx.drawImage(landMask(data.wards.outline), 0, 0)
+  ctx.drawImage(landMask(data.wards.mmr_outline ?? data.wards.outline), 0, 0)
   ctx.globalCompositeOperation = 'source-over'
 }
 
@@ -122,14 +122,14 @@ function mulberry32(seed: number) {
  * Each line advects for `STEPS` steps; step length scales with local wind speed so faster
  * air draws longer trails. Lines are duplicated one loop earlier so the animation wraps seamlessly.
  */
-export function traceStreamlines(data: TwinData, f: number, count = 900): Streamline[] {
+export function traceStreamlines(data: TwinData, f: number, count = 1150): Streamline[] {
   const field = windSampler(data, f)
   const rand = mulberry32(1337)
   const STEPS = 28
   // Seconds of real advection per step, exaggerated so 2 m/s air moves visibly.
   const DT = 70
   const out: Streamline[] = []
-  const ext = { west: 72.68, east: 73.08, south: 18.84, north: 19.34 }
+  const ext = { west: 72.66, east: 73.30, south: 18.84, north: 19.48 }
   for (let n = 0; n < count; n++) {
     let lon = ext.west + rand() * (ext.east - ext.west)
     let lat = ext.south + rand() * (ext.north - ext.south)

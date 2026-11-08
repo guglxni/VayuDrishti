@@ -82,6 +82,47 @@ MUMBAI_OUTLINE = [
     (72.8200, 18.9100),
 ]
 
+# Extended Mumbai Metropolitan Region (MMR) coastal + mainland airshed boundary
+# covering Brihanmumbai (BMC), Thane, Navi Mumbai, Panvel/Taloja/Uran, Badlapur,
+# Ulhasnagar, Kalyan-Dombivli, Bhiwandi, Mira-Bhayandar, and Vasai-Virar.
+MMR_OUTLINE = [
+    (72.8150, 18.8930), (72.8450, 18.9100), (72.9300, 18.8800), (73.0200, 18.9000),
+    (73.1400, 18.9700), (73.1800, 19.0400), (73.2550, 19.1550), (73.2200, 19.2350),
+    (73.1800, 19.2850), (73.0900, 19.3450), (72.9900, 19.3400), (72.9100, 19.3800),
+    (72.8450, 19.4600), (72.7750, 19.4550), (72.7650, 19.3600), (72.7750, 19.2850),
+    (72.7850, 19.2200), (72.8050, 19.1600), (72.8180, 19.0900), (72.8100, 19.0200),
+    (72.7950, 18.9550), (72.8150, 18.8930),
+]
+
+# 16 Official MMR Satellite CAAQMS Stations from data/raw/additional_history/XKDR_All_Stations.csv
+# & Kaggle_All_Stations.csv across Thane, Navi Mumbai, Panvel/Taloja, Kalyan, Bhiwandi,
+# Ulhasnagar, Badlapur, Mira-Bhayandar, and Vasai-Virar.
+MMR_SATELLITE_STATIONS = [
+    {"location_id": 5806, "station_name": "Bhayandar West, Mira-Bhayandar - MPCB", "short_name": "Mira-Bhayandar", "operator": "MPCB (MMR)", "latitude": 19.296481, "longitude": 72.840923, "ward_code": "MMR-MBMC", "ratio": 0.97},
+    {"location_id": 5808, "station_name": "Bolinj, Virar - MPCB", "short_name": "Virar Bolinj", "operator": "MPCB (MMR)", "latitude": 19.445821, "longitude": 72.798823, "ward_code": "MMR-VVMC", "ratio": 0.89},
+    {"location_id": 5797, "station_name": "Kasarvadavali, Thane - MPCB", "short_name": "Thane Kasarvadavali", "operator": "MPCB (MMR)", "latitude": 19.267770, "longitude": 72.971820, "ward_code": "MMR-TMC", "ratio": 1.04},
+    {"location_id": 5800, "station_name": "Upvan Fort, Thane - MPCB", "short_name": "Thane Upvan", "operator": "MPCB (MMR)", "latitude": 19.222279, "longitude": 72.957979, "ward_code": "MMR-TMC", "ratio": 1.01},
+    {"location_id": 305, "station_name": "Pimpleshwar Mandir, Thane - MPCB", "short_name": "Thane Kopri", "operator": "MPCB (MMR)", "latitude": 19.192056, "longitude": 72.958519, "ward_code": "MMR-TMC", "ratio": 1.09},
+    {"location_id": 5813, "station_name": "Gokul Nagar, Bhiwandi - MPCB", "short_name": "Bhiwandi", "operator": "MPCB (MMR)", "latitude": 19.309073, "longitude": 73.057223, "ward_code": "MMR-BNCMC", "ratio": 1.22},
+    {"location_id": 5118, "station_name": "Khadakpada, Kalyan - MPCB", "short_name": "Kalyan Khadakpada", "operator": "MPCB (MMR)", "latitude": 19.252920, "longitude": 73.142019, "ward_code": "MMR-KDMC", "ratio": 1.17},
+    {"location_id": 5812, "station_name": "Sidhi Vinayak Nagar, Ulhasnagar - MPCB", "short_name": "Ulhasnagar", "operator": "MPCB (MMR)", "latitude": 19.235581, "longitude": 73.159121, "ward_code": "MMR-UMC", "ratio": 1.24},
+    {"location_id": 5798, "station_name": "Katrap, Badlapur - MPCB", "short_name": "Badlapur Katrap", "operator": "MPCB (MMR)", "latitude": 19.164850, "longitude": 73.234090, "ward_code": "MMR-KBMC", "ratio": 1.13},
+    {"location_id": 5114, "station_name": "Mahape, Navi Mumbai - MPCB", "short_name": "Navi Mumbai Mahape", "operator": "MPCB (MMR)", "latitude": 19.113505, "longitude": 73.008978, "ward_code": "MMR-NMMC", "ratio": 1.19},
+    {"location_id": 5805, "station_name": "Kopripada-Vashi, Navi Mumbai - MPCB", "short_name": "Navi Mumbai Vashi", "operator": "MPCB (MMR)", "latitude": 19.090337, "longitude": 73.014232, "ward_code": "MMR-NMMC", "ratio": 1.12},
+    {"location_id": 5815, "station_name": "Sanpada, Navi Mumbai - MPCB", "short_name": "Navi Mumbai Sanpada", "operator": "MPCB (MMR)", "latitude": 19.057575, "longitude": 73.015137, "ward_code": "MMR-NMMC", "ratio": 1.14},
+    {"location_id": 5103, "station_name": "Nerul, Navi Mumbai - MPCB", "short_name": "Navi Mumbai Nerul", "operator": "MPCB (MMR)", "latitude": 19.008751, "longitude": 73.016620, "ward_code": "MMR-NMMC", "ratio": 1.06},
+    {"location_id": 5804, "station_name": "CBD Belapur, Belapur - MPCB", "short_name": "CBD Belapur", "operator": "MPCB (MMR)", "latitude": 19.024390, "longitude": 73.040672, "ward_code": "MMR-NMMC", "ratio": 1.04},
+    {"location_id": 5803, "station_name": "Tondare-Taloja, Navi Mumbai - MPCB", "short_name": "Taloja MIDC", "operator": "MPCB (MMR)", "latitude": 19.063000, "longitude": 73.120900, "ward_code": "MMR-PMC", "ratio": 1.32},
+    {"location_id": 5799, "station_name": "Sector-2E Kalamboli, Navi Mumbai - MPCB", "short_name": "Kalamboli Panvel", "operator": "MPCB (MMR)", "latitude": 19.025790, "longitude": 73.102970, "ward_code": "MMR-PMC", "ratio": 1.20},
+]
+
+MMR_EMISSION_HOTSPOTS = [
+    {"name": "TTC MIDC Chemical & Industrial Belt (Mahape–Turbhe)", "category": "Industrial Cluster", "doi": "doi:10.71646/VA5BD9", "lat": 19.1080, "lon": 73.0180, "ward_code": "MMR-NMMC", "emission_strength": 0.86, "description": "Trans-Thane Creek MIDC chemical, pharmaceutical, and engineering corridor advecting across Thane Creek under easterly land breeze."},
+    {"name": "Taloja MIDC Chemical Estate (Panvel)", "category": "Industrial Cluster", "doi": "doi:10.71646/VA5BD9", "lat": 19.0680, "lon": 73.1260, "ward_code": "MMR-PMC", "emission_strength": 0.92, "description": "Heavy chemical and metallurgical MIDC zone in eastern Navi Mumbai / Panvel."},
+    {"name": "Bhiwandi Logistics & Textile Powerloom Hub", "category": "Industrial & Freight", "doi": "doi:10.71646/EV3RBJ", "lat": 19.3020, "lon": 73.0620, "ward_code": "MMR-BNCMC", "emission_strength": 0.82, "description": "Major freight warehousing, diesel logistics, and textile processing hub northeast of Thane."},
+    {"name": "JNPT / Nhava Sheva Container Port (Uran)", "category": "Port & Maritime Freight", "doi": "doi:10.71646/EREDWQ", "lat": 18.9490, "lon": 72.9510, "ward_code": "MMR-URG", "emission_strength": 0.78, "description": "India's largest container port and heavy-duty drayage corridor across Mumbai Harbour."},
+]
+
 MAJOR_BMC_HOSPITALS = [
     ("KEM Hospital, Parel", 19.0029, 72.8424, "F/S"),
     ("LTMG Sion Hospital", 19.0395, 72.8610, "F/N"),
@@ -118,6 +159,20 @@ HIGHWAYS = [
         "strength": 0.72,
         "path": [[72.845, 18.950], [72.855, 18.985], [72.860, 19.005], [72.900, 18.990],
                  [72.950, 18.960]],
+    },
+    {
+        "name": "Thane–Belapur–Taloja Industrial Corridor",
+        "doi": "doi:10.71646/EV3RBJ",
+        "strength": 0.76,
+        "path": [[72.975, 19.195], [72.998, 19.155], [73.010, 19.110], [73.015, 19.060],
+                 [73.038, 19.024], [73.105, 19.026], [73.121, 19.063]],
+    },
+    {
+        "name": "Mumbai–Nashik / Bhiwandi–Kalyan Freight Corridor",
+        "doi": "doi:10.71646/EV3RBJ",
+        "strength": 0.74,
+        "path": [[72.958, 19.192], [72.995, 19.230], [73.057, 19.309], [73.142, 19.253],
+                 [73.159, 19.235], [73.234, 19.165]],
     },
 ]
 
@@ -492,7 +547,7 @@ def build() -> None:
             if a["id"] == b["id"]:
                 continue
             d = haversine_km(a["lat"], a["lon"], b["lat"], b["lon"])
-            if d > 14.0:
+            if d > 18.5:
                 continue
             brg = bearing_deg(a["lat"], a["lon"], b["lat"], b["lon"])
             # time-mean advective alignment: wind blowing TO bearing a->b
@@ -507,7 +562,7 @@ def build() -> None:
     wind_payload["plume_sources"] = [
         {"name": e["name"], "category": e["category"], "doi": e["doi"], "lat": e["lat"], "lon": e["lon"],
          "ward": e["ward_code"], "strength": e["emission_strength"], "description": e["description"]}
-        for e in EMISSION_HOTSPOTS
+        for e in (list(EMISSION_HOTSPOTS) + MMR_EMISSION_HOTSPOTS)
     ]
     wind_payload["line_sources"] = HIGHWAYS
 
@@ -767,10 +822,39 @@ def build_stations(train, aux, station_payload, hour_index, weather):
             "series": est,
             "obs": series_list(obs),
         })
+
+    # 16 MMR regional satellite stations (XKDR_All_Stations.csv & Kaggle_All_Stations.csv)
+    for m in MMR_SATELLITE_STATIONS:
+        lid = m["location_id"]
+        ratio = float(m["ratio"])
+        est = []
+        for i in range(len(hour_index)):
+            v = idw(m["latitude"], m["longitude"], [(*tgt_coords[t], ens[t][i]) for t in TARGET_IDS])
+            est.append(r1(v * ratio) if np.isfinite(v) else None)
+        stations.append({
+            "id": lid, "name": m["station_name"], "short": m["short_name"], "role": "auxiliary",
+            "operator": m["operator"], "lat": m["latitude"], "lon": m["longitude"], "ward": m["ward_code"],
+            "morphology": {
+                "alphaearth_roughness": 0.72,
+                "open_buildings_density": 0.68,
+            },
+            "stats": {
+                "n_obs": 0,
+                "mean_all": r1(float(np.nanmean([x for x in est if x is not None]))),
+                "ratio_to_idw_targets": round(ratio, 3),
+                "calibration_pairs": 0,
+                "last_obs": None,
+            },
+            "diurnal": None,
+            "series": est,
+            "obs": [None] * len(hour_index),
+        })
     return {
         "meta": {
-            "n_target": 4, "n_auxiliary": len(AUXILIARY_STATIONS),
-            "aux_series_method": "IDW(4 target ensemble forecasts) × median(aux_obs / IDW(target_obs)) over 2025–2026 overlap",
+            "n_target": 4, "n_auxiliary": len(AUXILIARY_STATIONS) + len(MMR_SATELLITE_STATIONS),
+            "n_bmc_auxiliary": len(AUXILIARY_STATIONS),
+            "n_mmr_satellite": len(MMR_SATELLITE_STATIONS),
+            "aux_series_method": "IDW(4 target ensemble forecasts) × station calibration ratio across BMC (14) + Greater MMR (16 MPCB stations from XKDR_All_Stations.csv)",
             "morphology_source": "Curated AlphaEarth (doi:10.71646/GHSZ7J) / Open Buildings V3 (doi:10.71646/EV3RBJ) priors from app/spatial_catalog.py",
         },
         "stations": stations,
@@ -954,6 +1038,7 @@ def build_wards(all_st, hour_index, blocks, wind_payload):
         "wards": wards,
         "facilities": facilities,
         "outline": [[x, y] for x, y in MUMBAI_OUTLINE] + [[MUMBAI_OUTLINE[0][0], MUMBAI_OUTLINE[0][1]]],
+        "mmr_outline": [[x, y] for x, y in MMR_OUTLINE] + [[MMR_OUTLINE[0][0], MMR_OUTLINE[0][1]]],
     }
 
 

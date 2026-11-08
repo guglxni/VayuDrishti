@@ -22,8 +22,8 @@ import { WardPopover, type WardPick } from './WardPopover'
 const ELEV_PER_UG = 60
 
 export const CAMERAS = {
-  sea: { center: [72.872, 19.085] as [number, number], zoom: 10.85, pitch: 58, bearing: 96 },
-  north: { center: [72.875, 19.09] as [number, number], zoom: 10.55, pitch: 40, bearing: -12 },
+  sea: { center: [72.935, 19.12] as [number, number], zoom: 10.15, pitch: 52, bearing: -12 },
+  north: { center: [72.875, 19.09] as [number, number], zoom: 10.75, pitch: 48, bearing: 96 },
   deonar: { center: [72.923, 19.051] as [number, number], zoom: 13.1, pitch: 62, bearing: -75 },
   malad: { center: [72.84, 19.187] as [number, number], zoom: 13, pitch: 58, bearing: 65 },
   borivali: { center: [72.868, 19.229] as [number, number], zoom: 13, pitch: 58, bearing: 45 },

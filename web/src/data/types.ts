@@ -195,6 +195,7 @@ export interface WardsFile {
   wards: Ward[]
   facilities: Facility[]
   outline: [number, number][]
+  mmr_outline?: [number, number][]
 }
 
 export interface Dataset {

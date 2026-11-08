@@ -6,8 +6,8 @@ import type { Cam } from './MapView'
 
 const ORDER: LayerKey[] = ['surface', 'wind', 'airphynet', 'network', 'wards', 'buildings', 'sources', 'facilities']
 const CAMERA_PRESETS: { id: Cam; label: string; title: string }[] = [
-  { id: 'sea', label: 'From sea', title: 'Look east across the city from the Arabian Sea' },
-  { id: 'north', label: 'North up', title: 'North-up city overview' },
+  { id: 'sea', label: 'Greater MMR', title: 'North-up overview of Mumbai, Thane, Navi Mumbai, Kalyan & Panvel' },
+  { id: 'north', label: 'From sea', title: 'Look east across the peninsula from the Arabian Sea' },
   { id: 'deonar', label: 'Shivaji / Deonar', title: 'Shivaji Nagar and the Deonar emission plume' },
   { id: 'malad', label: 'Malad West', title: 'Malad West forecast station' },
   { id: 'borivali', label: 'Borivali East', title: 'Borivali East forecast station' },

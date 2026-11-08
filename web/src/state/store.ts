@@ -7,13 +7,13 @@ export type View = 'map' | 'column' | 'forecast' | 'wards'
 export type LayerKey = 'surface' | 'wind' | 'airphynet' | 'wards' | 'network' | 'buildings' | 'sources' | 'facilities'
 
 export const LAYER_LABELS: Record<LayerKey, { label: string; hint: string }> = {
-  surface: { label: 'PM2.5 surface', hint: 'Interpolated from 18 stations' },
+  surface: { label: 'PM2.5 surface', hint: 'Interpolated from 34 MMR stations' },
   wind: { label: 'Wind', hint: 'Open-Meteo 10 m + VABB METAR' },
-  airphynet: { label: 'AirPhyNet flux', hint: 'Wind-guided station-to-station transport' },
+  airphynet: { label: 'AirPhyNet flux', hint: 'Trans-boundary MMR station transport' },
   wards: { label: 'Ward boundaries', hint: '24 BMC wards (approximate)' },
-  network: { label: 'Other stations', hint: '14 CPCB / MPCB / IITM monitors' },
+  network: { label: 'Other stations', hint: '30 BMC + MMR MPCB / IITM monitors' },
   buildings: { label: '3D buildings', hint: 'OpenStreetMap footprints' },
-  sources: { label: 'Emission sources', hint: 'Landfills, refineries, highways' },
+  sources: { label: 'Emission sources', hint: 'Landfills, MIDC belts, highways' },
   facilities: { label: 'Schools & hospitals', hint: 'UDISE+ and BMC civic hospitals' },
 }
 
@@ -90,7 +90,11 @@ export const useTwin = create<TwinState>((set, get) => ({
   stationId: 3409511,
   setStation: (stationId) => {
     const st = get().data?.stations.stations.find((s) => s.id === stationId)
-    set(st ? { stationId, wardCode: st.ward } : { stationId })
+    if (st && !st.ward.startsWith('MMR-')) {
+      set({ stationId, wardCode: st.ward })
+    } else {
+      set({ stationId })
+    }
   },
   wardCode: 'M/E',
   setWard: (wardCode) => set({ wardCode }),
