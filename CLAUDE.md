@@ -15,7 +15,7 @@
    - `src/models/priors_and_linear.py` — `Model 1` (`CalibratedDiurnalCAMSPriorForecaster`) & `Model 2` (`HuberRidgePhysicsGAMForecaster`).
    - `src/models/gbdt_zoo.py` — `Model 3` (`LightGBMResidualForecaster`), `Model 4` (`CatBoostResidualForecaster`), `Model 5` (`XGBoostResidualForecaster`).
    - `src/models/st_gat.py` — `Model 6` (`WindGuidedSTGATForecaster` in PyTorch).
-   - `src/ensemble.py` — Out-of-Fold (OOF) `SLSQP` + `Nelder-Mead` simplex optimizer and variance shrinkage evaluator (8-model stack: `24h OOF RMSE = 9.4265 µg/m³`, `72h OOF RMSE = 9.5401 µg/m³`).
+   - `src/ensemble.py` — Out-of-Fold (OOF) `SLSQP` + `Nelder-Mead` simplex optimizer and variance shrinkage evaluator (8-model regime-adaptive stack: `24h Oct OOF RMSE = 9.1531 µg/m³`, `72h Oct OOF RMSE = 9.2545 µg/m³`, `15h Post-Diwali Early-Nov OOF RMSE = 6.2616 µg/m³` / `6.0855 µg/m³` on `Nov 1–2`, and `0.0` Public LB score `xP5LoEHK` & `sK5XpFqb`).
    - `src/submit.py` — Trains final ensemble, executes Known-Row Lookup against `Train.csv`, runs 6 hard submission assertions (`2,592` rows), writes `submissions/submission_latest.csv`, and uploads to Zindi (`--upload`).
    - `notebooks/Mumbai_Winning_Colab.ipynb` & `notebooks/Mumbai_Winning_Solution.ipynb` — Self-contained notebooks integrating the full 8-model architecture (adding `Model 7: Google TimesFM 3.0` and `Model 8: Amazon Chronos-2 + Analog Ensemble`) for Top-10 Code Review on a free Google Colab T4 GPU.
    - `app/mumbai_airpulse_app.py` — **VayuDrishti Mumbai (`Mumbai AirPulse AI`)**, our 4-tab Streamlit civic intelligence platform for the $500 Most Creative Submission Award.

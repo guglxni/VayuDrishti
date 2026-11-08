@@ -68,29 +68,42 @@ class CalibratedDiurnalCAMSPriorForecaster:
     ) -> np.ndarray:
         h = np.maximum(feat_df["horizon_hours"].values, 0.0)
         h_long = np.clip((h - 48.0) / 48.0, 0.0, 1.0)
-
-        base_diurnal = (
-            self.diurnal_weight_eb * feat_df["prior_eb_diurnal"].values
-            + self.diurnal_weight_adaptive * feat_df["prior_diurnal_adaptive"].values
+        rg = (
+            feat_df["regime_gate_t0"].values
+            if "regime_gate_t0" in feat_df.columns
+            else np.zeros(len(feat_df))
         )
-        # Use MOS-corrected, tanh-saturated CAMS relative factor from src/features.py
-        cams_rel = np.clip(feat_df["cams_rel_factor"].values, 0.45, 2.2)
-        vent_anom = feat_df["wx_anom_log1p_vc"].values
-        vent_fac = np.clip(np.exp(-v_sens * vent_anom), 0.84, 1.20)
+        regime_damp = np.clip(1.0 - rg, 0.0, 1.0)
 
-        eff_exp = c_exp + 0.08 * h_long
-        scaled_prior = base_diurnal * (cams_rel ** eff_exp) * vent_fac
+        # Start from the regime-adaptive Spatial James-Stein + HOD-debiased physics prior
+        base_phys = feat_df["prior_physics_calibrated"].values
+        cams_rel = np.clip(feat_df["cams_rel_factor"].values, 0.40, 2.2)
+        vent_anom = feat_df["wx_anom_log1p_vc"].values
+
+        # Apply differential parameter adjustments around the reference (0.42, 0.075, 0.22)
+        delta_exp = (c_exp - 0.42) * regime_damp
+        delta_vsens = (v_sens - 0.075) * regime_damp
+        mod_factor = np.clip(
+            (cams_rel ** delta_exp) * np.exp(-delta_vsens * vent_anom),
+            0.88,
+            1.14,
+        )
+        pred = base_phys * mod_factor
 
         cams_cal = (
             0.65 * feat_df["cams_pm25_calibrated"].values
             + 0.35 * feat_df["cams_pm25_offset_calibrated"].values
         )
-        eff_blend = np.clip(c_blend + 0.05 * h_long, 0.08, 0.32)
-        pred = (1.0 - eff_blend) * scaled_prior + eff_blend * cams_cal
+        delta_blend = (c_blend - 0.22) * regime_damp
+        pred = pred + delta_blend * (cams_cal - base_phys)
 
         # AirPhyNet upwind advection PDE correction (bounded so local spikes never overshoot)
         if "airphynet_pde_total_flux" in feat_df.columns and adv_gain > 0.0:
-            pde_adj = np.clip(adv_gain * feat_df["airphynet_pde_total_flux"].values, -3.5, 3.5)
+            pde_adj = np.clip(
+                adv_gain * regime_damp * feat_df["airphynet_pde_total_flux"].values,
+                -3.5,
+                3.5,
+            )
             pred = pred + pde_adj
 
         # Gentle climatological drift adjustment for ultra-long horizons (>96h)
@@ -454,5 +467,8 @@ class HuberRidgePhysicsGAMForecaster:
             + self.log_duan_weight * res_log_duan
             + self.analog_weight * (res_analog * self.residual_damping)
         )
+        if "regime_gate_t0" in feat_df.columns:
+            rg = feat_df["regime_gate_t0"].values
+            total_res = np.where(total_res > 0.0, total_res * (1.0 - 0.85 * rg), total_res)
         res_clipped = np.clip(total_res, -16.0, 16.0)
         return np.asarray(np.clip(y_prior + res_clipped, 2.0, 450.0), dtype=float)

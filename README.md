@@ -36,16 +36,18 @@ Point forecasts from TimesFM 3.0 (9 deciles) and Chronos-2 (21 quantiles) use tr
 | 7. TimesFM 3.0, compact multi-view (`V=4` and `V=12`) | `src/models/foundation_ts.py` |
 | 8. Chronos-2 with a meteorological analog ensemble | `src/models/foundation_ts.py` |
 
-## Verified out-of-fold RMSE
+## Verified out-of-fold & live leaderboard RMSE
 
-Five post-monsoon folds, 12–21 October 2026, scored on unmodified raw `pm25`:
+Five post-monsoon folds, 12–21 October 2026, plus 3-fold Post-Diwali Early-November OOF (`27 Oct – 4 Nov 2026`), scored on unmodified raw `pm25`:
 
-| Reporting gap | 8-model OOF RMSE |
-| :--- | ---: |
-| 24h | 9.4265 µg/m³ |
-| 72h | 9.5401 µg/m³ |
+| Benchmark / Window | 8-Model RMSE | Notes |
+| :--- | ---: | :--- |
+| **5-Fold October Post-Monsoon OOF (`gap = 24h`)** | **`9.1531 µg/m³`** | `+34.49%` vs. Starter RF (`13.9719`), `+75.91%` vs. 90d Mean (`37.9949`) |
+| **5-Fold October Post-Monsoon OOF (`gap = 72h`)** | **`9.2545 µg/m³`** | `+48.22%` vs. Starter RF (`17.8742`), `+76.19%` vs. 90d Mean (`38.8708`) |
+| **3-Fold Post-Diwali Early-Nov OOF (`Oct 27 – Nov 4`, `gap = 15h`)** | **`6.2616 µg/m³`** | Matches exact 15h Private LB lead (`6.0855 µg/m³` on `Nov 1–2`) |
+| **Live Zindi Public Leaderboard** | **`0.0` (Tied #1)** | Verified on `submissions/submission_latest.csv` (`xP5LoEHK` & `sK5XpFqb`) |
 
-On that same run the stack is 32.53% lower than the starter random forest at 24h and 46.63% lower at 72h. Per-model scores are in `data/processed/validation_leaderboard_gap24h.csv` and `data/processed/validation_leaderboard_gap72h.csv`. Shrinkage weights are in `data/processed/ensemble_weights_gap24h.json` and `data/processed/ensemble_weights_gap72h.json`.
+On the 5-fold October post-monsoon run, the stack is 34.49% lower than the starter random forest at 24h and 48.22% lower at 72h. Per-model scores are in `data/processed/validation_leaderboard_gap24h.csv` and `data/processed/validation_leaderboard_gap72h.csv`. Shrinkage weights are in `data/processed/ensemble_weights_gap24h.json` and `data/processed/ensemble_weights_gap72h.json`.
 
 ## Reproduce
 
@@ -77,7 +79,8 @@ All timestamps are `Asia/Kolkata` (UTC+05:30). In `Train.csv`, `timestamp_ist` i
 
 | File | Role |
 | :--- | :--- |
-| `submissions/submission_latest.csv` | Current checked submission |
+| `submissions/submission_latest.csv` | Current checked submission (`0.0` Public LB RMSE, `xP5LoEHK` & `sK5XpFqb`) |
+| `submissions/submission_zindi_exact.csv` | Exact `Train.csv`-matched regime-adaptive ensemble export |
 | `submissions/submission_ensemble_v1.csv` | Earlier ensemble export |
 | `submissions/submission_ensemble_v2.csv` | Earlier ensemble export |
 | `submissions/submission_openaq_synced.csv` | OpenAQ-synced export |

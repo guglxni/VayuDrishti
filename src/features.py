@@ -114,6 +114,7 @@ class ExternalDataStore:
 
 
 _GLOBAL_STORE: ExternalDataStore | None = None
+_CUTOFF_SLICE_CACHE: dict[tuple[int, int, int, int, int], pd.DataFrame] = {}
 
 
 def _compute_weather_physics(wx: pd.DataFrame) -> pd.DataFrame:
@@ -788,17 +789,240 @@ def build_features_for_cutoff(
     )
     df["cams_pm25_rel_change"] = df["prior_eb_diurnal"] * df["cams_rel_factor"]
 
-    # Physics-Calibrated Composite Prior (Model 1 foundation):
-    # Scales the adaptive Empirical Bayes diurnal profile by tanh-saturated CAMS MOS factor
-    # and ventilation anomaly exp(-beta_vc * Delta log(1 + VC))
-    vent_factor = np.clip(np.exp(-0.075 * df["wx_anom_log1p_vc"]), 0.84, 1.20)
-    base_diurnal_blend = 0.55 * df["prior_eb_diurnal"] + 0.45 * df["prior_diurnal_adaptive"]
-    c_exp_h = 0.42 + 0.08 * h_long
-    scaled_synoptic_prior = base_diurnal_blend * (df["cams_rel_factor"] ** c_exp_h) * vent_factor
-    cams_direct_mos = 0.65 * df["cams_pm25_calibrated"] + 0.35 * df["cams_pm25_offset_calibrated"]
-    c_blend_h = 0.22 + 0.05 * h_long
-    df["prior_physics_calibrated"] = np.clip(
+    # -------------------------------------------------------------------------
+    # 4b-ii. Regime-Adaptive Spatial James-Stein + HOD-Debiased Synoptic Physics Prior
+    # -------------------------------------------------------------------------
+    # Compute 21-day unweighted context mean per station to detect post-episode cleansing hangover
+    t_last_obs = hist["hour_end"].max()
+    obs_gap_h = float((cutoff_t0 - t_last_obs).total_seconds() / 3600.0)
+    s_ctx21_map = (
+        hist.loc[hist["age_hours"] <= 21 * 24]
+        .groupby("location_id")["pm25_clean"]
+        .mean()
+        .to_dict()
+    )
+    df["station_ctx21d_raw_mean"] = (
+        df["location_id"].map(s_ctx21_map).fillna(df["station_level_14d_mean"])
+    )
+    recent_lvl_blend = (
+        0.60 * df["station_level_3d_mean"].values
+        + 0.40 * df["station_level_7d_mean"].values
+    )
+    ctx_hangover = df["station_ctx21d_raw_mean"].values - recent_lvl_blend
+    cleansing_intensity = np.clip((ctx_hangover - 3.5) / 8.0, 0.0, 1.0)
+    df["ctx_hangover_21d"] = ctx_hangover
+    df["cleansing_intensity_t0"] = cleansing_intensity
+    df["obs_gap_hours_t0"] = obs_gap_h
+
+    # Matched-timestamp CAMS 7-day baseline over actual observed hours in [T0-7d, T0]
+    hist7_obs = hist.loc[hist["age_hours"] <= 7 * 24].copy()
+    hist7_obs = hist7_obs.merge(
+        store.aq_df[["location_id", "target_start_ist", "pm2_5"]],
+        on=["location_id", "target_start_ist"],
+        how="left",
+    )
+    hist7_obs["w_c"] = np.exp(-np.log(2.0) * hist7_obs["age_hours"] / (3.5 * 24.0))
+    hist7_obs["wc_pm25"] = hist7_obs["w_c"] * hist7_obs["pm2_5"]
+
+    s_c_sum = hist7_obs.groupby("location_id")[["wc_pm25", "w_c"]].sum()
+    s_c_match = (s_c_sum["wc_pm25"] / np.maximum(s_c_sum["w_c"], 1e-6)).to_dict()
+    sh_c_sum = hist7_obs.groupby(["location_id", "hour"])[["wc_pm25", "w_c"]].sum()
+    sh_c_match = (
+        sh_c_sum["wc_pm25"] / np.maximum(sh_c_sum["w_c"], 1e-6)
+    ).rename("_sh_c_match")
+
+    df = df.merge(sh_c_match.reset_index(), on=["location_id", "hour"], how="left")
+    s_c_matched_arr = (
+        df["location_id"].map(s_c_match).fillna(df["cams_t0_7d_s_pm25"]).values
+    )
+    sh_c_matched_arr = (
+        df["_sh_c_match"]
+        .fillna(pd.Series(s_c_matched_arr, index=df.index))
+        .values
+    )
+    df = df.drop(columns=["_sh_c_match"])
+
+    obs_last4d = len(hist.loc[hist["age_hours"] <= 4 * 24])
+    use_match_w = 1.0 if obs_last4d >= 48 else 0.0
+    c_s_base = (
+        use_match_w * s_c_matched_arr
+        + (1.0 - use_match_w) * df["cams_t0_7d_s_pm25"].values
+    )
+    c_sh_base = (
+        use_match_w * sh_c_matched_arr
+        + (1.0 - use_match_w) * df["cams_t0_7d_sh_pm25"].values
+    )
+
+    # 100% HOD-debiased CAMS ratio + harbor CAMS pooling for Byculla (3409510) during cleansing/flushing
+    log_r_h_raw = np.log(np.maximum(df["pm2_5"].values, 5.0) / np.maximum(c_sh_base, 8.0))
+    log_r_24_raw = np.log(
+        np.maximum(df["cams_pm25_roll24h"].values, 5.0) / np.maximum(c_s_base, 8.0)
+    )
+    df["_lr_h_tmp"] = log_r_h_raw
+    df["_lr_24_tmp"] = log_r_24_raw
+    city_lr_h = df.groupby("target_start_ist")["_lr_h_tmp"].transform("median").values
+    city_lr_24 = df.groupby("target_start_ist")["_lr_24_tmp"].transform("median").values
+    df = df.drop(columns=["_lr_h_tmp", "_lr_24_tmp"])
+
+    locs = df["location_id"].values
+    pool_byculla_w = np.where(
+        locs == 3409510,
+        0.75 * np.maximum(cleansing_intensity, np.clip(-city_lr_24 / 0.15, 0.0, 1.0)),
+        0.0,
+    )
+    log_r_h_st = (1.0 - pool_byculla_w) * log_r_h_raw + pool_byculla_w * city_lr_h
+    log_r_24_st = (1.0 - pool_byculla_w) * log_r_24_raw + pool_byculla_w * city_lr_24
+    df["cams_log_ratio_24h_pooled"] = log_r_24_st
+
+    # Suppress spurious afternoon CAMS photochemical aerosol peaks (hours 12..19) above 24h trajectory
+    hr_val = df["hour"].values.astype(float)
+    afternoon_mask = np.exp(-0.5 * ((hr_val - 15.5) / 2.8) ** 2)
+    excess_afternoon = np.maximum(0.0, log_r_h_st - log_r_24_st)
+    log_r_h_clean = log_r_h_st - 0.85 * afternoon_mask * excess_afternoon
+    df["excess_afternoon_cams"] = afternoon_mask * excess_afternoon
+
+    is_frontal_drop = np.clip((log_r_24_st - log_r_h_clean) / 0.25, 0.0, 1.0)
+    w_24_syn = np.clip(
+        (0.32 * (1.0 - 0.55 * h_long) + 0.62 * cleansing_intensity)
+        * (1.0 - 0.65 * is_frontal_drop),
+        0.12,
+        0.92,
+    )
+    r_blend_syn = (1.0 - w_24_syn) * log_r_h_clean + w_24_syn * log_r_24_st
+    r_sat_syn = np.where(
+        r_blend_syn > 0.0,
+        tau_cams * np.tanh(r_blend_syn / tau_cams),
+        r_blend_syn,
+    )
+    r_mos_syn = np.where(
+        r_sat_syn > 0.0,
+        r_sat_syn * df["cams_mos_damp_factor"].values,
+        r_sat_syn,
+    )
+
+    # Synoptic flushing gate & station-specific source-apportionment elasticity
+    vc_flush = np.clip((df["wx_anom_log1p_vc"].values - 0.45) / 0.85, 0.0, 1.0)
+    cams_flush = np.clip((-r_mos_syn - 0.12) / 0.35, 0.0, 1.0) * np.clip(
+        df["wx_anom_log1p_vc"].values / 0.65, 0.0, 1.0
+    )
+    is_flush = np.maximum(
+        cams_flush, 0.65 * vc_flush * np.clip(-r_mos_syn / 0.15, 0.0, 1.0)
+    )
+    df["is_flush_regime"] = is_flush
+    gap_flag = np.clip((obs_gap_h - 18.0) / 24.0, 0.0, 1.0)
+    df["regime_gate_t0"] = np.maximum(
+        gap_flag, np.maximum(cleansing_intensity, is_flush)
+    )
+
+    st_flush_elast = np.where(
+        locs == 3409510,
+        1.65,
+        np.where(locs == 11611, 1.00, np.where(locs == 11606, 0.58, 0.34)),
+    )
+    night_wind_flush = np.exp(-0.5 * ((hr_val - 3.5) / 2.8) ** 2) * np.clip(
+        (df["wind_speed_10m"].values - 7.5) / 3.5, 0.0, 1.0
+    )
+    eff_elast = st_flush_elast + 0.35 * night_wind_flush * (1.0 - st_flush_elast)
+    r_mos_st = np.where(
+        r_mos_syn < 0.0,
+        r_mos_syn * (1.0 + is_flush * (eff_elast - 1.0)),
+        r_mos_syn,
+    )
+    c_rel_syn = np.clip(np.exp(r_mos_st), 0.35, 2.2)
+
+    # Spatial James-Stein Level Shrinkage using unweighted 21d equilibrium spatial ratio
+    city_3d = df.groupby("target_start_ist")["station_level_3d_mean"].transform("mean").values
+    city_ctx21 = df.groupby("target_start_ist")["station_ctx21d_raw_mean"].transform("mean").values
+    spatial_ratio_21d = np.clip(
+        df["station_ctx21d_raw_mean"].values / np.maximum(city_ctx21, 10.0),
+        0.62,
+        1.25,
+    )
+    js_spatial_level = city_3d * spatial_ratio_21d
+    own_3d7d_level = (
+        0.65 * df["station_level_3d_mean"].values
+        + 0.35 * df["station_level_7d_mean"].values
+    )
+    clean_station_level = 0.50 * own_3d7d_level + 0.50 * js_spatial_level
+
+    sh7 = df["sh_mean_7d"].values - df["station_level_7d_mean"].values
+    sh14 = df["sh_mean_14d"].values - df["station_level_14d_mean"].values
+    sh14_med = df["sh_median_14d"].values - df["station_level_14d_median"].values
+    multi_sh = 0.45 * sh7 + 0.35 * sh14 + 0.20 * sh14_med
+
+    fast_clean_diurnal = clean_station_level + 0.45 * multi_sh
+    flush_diurnal = (
+        0.50 * df["prior_eb_diurnal"].values
+        + 0.50 * df["prior_diurnal_adaptive"].values
+    ) - 0.35 * np.maximum(is_flush, night_wind_flush) * np.maximum(sh7, 0.0)
+    base_diurnal_blend = (
+        1.0 - 0.90 * cleansing_intensity
+    ) * flush_diurnal + (0.90 * cleansing_intensity) * fast_clean_diurnal
+
+    flush_drop_gate = np.clip((-r_mos_syn - 0.05) / 0.20, 0.0, 1.0)
+    byculla_vc_damp = np.where(
+        locs == 3409510,
+        np.exp(-0.15 * flush_drop_gate * np.maximum(df["wx_anom_log1p_vc"].values, 0.0)),
+        1.0,
+    )
+    vent_factor = np.clip(
+        np.exp(
+            -0.075
+            * df["wx_anom_log1p_vc"].values
+            * (1.0 - 0.70 * cleansing_intensity)
+        )
+        * byculla_vc_damp,
+        0.76,
+        1.20,
+    )
+    rebound_gate = np.clip((r_mos_st - 0.10) / 0.18, 0.0, 1.0)
+    c_exp_h = (0.44 + 0.08 * h_long) * (
+        1.0 - 0.75 * cleansing_intensity * (1.0 - rebound_gate)
+    )
+
+    city_base = df["city_pm25_mean_t0"].values
+    eff_base_for_syn = np.where(
+        (locs == 3409510) & (r_mos_st > 0.0),
+        0.35 * base_diurnal_blend + 0.65 * city_base,
+        base_diurnal_blend,
+    )
+    syn_mult = (c_rel_syn ** c_exp_h) * vent_factor
+    scaled_synoptic_prior = base_diurnal_blend + eff_base_for_syn * (syn_mult - 1.0)
+    cams_direct_mos = base_diurnal_blend + eff_base_for_syn * (c_rel_syn - 1.0)
+    c_blend_h = (0.20 + 0.05 * h_long) * (
+        1.0 - 0.85 * np.maximum(cleansing_intensity, is_flush)
+    )
+    p_phys_base = np.clip(
         (1.0 - c_blend_h) * scaled_synoptic_prior + c_blend_h * cams_direct_mos,
+        2.0,
+        450.0,
+    )
+
+    # Within-station-day primary combustion (CO) & wind dispersion modulation
+    df["_dt_key"] = df["target_start_ist"].dt.date
+    co_dm = (
+        df["cams_log_co"].values
+        - df.groupby(["location_id", "_dt_key"])["cams_log_co"].transform("mean").values
+    )
+    w_dm = (
+        df["wind_speed_10m"].values
+        - df.groupby(["location_id", "_dt_key"])["wind_speed_10m"].transform("mean").values
+    )
+    rh_dm = (
+        df["relative_humidity_2m"].values
+        - df.groupby(["location_id", "_dt_key"])["relative_humidity_2m"].transform("mean").values
+    )
+    df = df.drop(columns=["_dt_key"])
+
+    mod_scale = 0.35 + 0.65 * np.maximum(cleansing_intensity, is_flush)
+    diurnal_met_mod = np.clip(
+        mod_scale * (3.2 * co_dm - 0.38 * w_dm + 0.05 * rh_dm),
+        -5.5,
+        5.5,
+    )
+    df["diurnal_met_mod"] = diurnal_met_mod
+    df["prior_physics_calibrated"] = np.clip(
+        p_phys_base + diurnal_met_mod,
         2.0,
         450.0,
     )
@@ -909,6 +1133,15 @@ NON_FEATURE_COLS: set[str] = {
     "is_spike_stage2",
     "is_outlier",
     "sensor_id",
+    "station_ctx21d_raw_mean",
+    "ctx_hangover_21d",
+    "cleansing_intensity_t0",
+    "obs_gap_hours_t0",
+    "excess_afternoon_cams",
+    "cams_log_ratio_24h_pooled",
+    "is_flush_regime",
+    "regime_gate_t0",
+    "diurnal_met_mod",
 }
 
 
@@ -981,12 +1214,23 @@ def build_multi_cutoff_training_dataset(
             continue
 
         hist_slice = train_df.loc[train_df["hour_end"] <= c_ts]
-        feat_slice = build_features_for_cutoff(
-            history_df=hist_slice,
-            target_df=target_slice,
-            cutoff_t0=c_ts,
-            store=store,
+        cache_key = (
+            int(pd.Timestamp(c_ts).value),
+            int(pd.Timestamp(t_start).value),
+            int(pd.Timestamp(t_end).value),
+            len(hist_slice),
+            len(target_slice),
         )
+        if cache_key in _CUTOFF_SLICE_CACHE:
+            feat_slice = _CUTOFF_SLICE_CACHE[cache_key].copy()
+        else:
+            feat_slice = build_features_for_cutoff(
+                history_df=hist_slice,
+                target_df=target_slice,
+                cutoff_t0=c_ts,
+                store=store,
+            )
+            _CUTOFF_SLICE_CACHE[cache_key] = feat_slice.copy()
         feat_slice["cutoff_t0"] = c_ts
         # Sample weight: upweight recent October-November post-monsoon windows
         days_before_max = (max_cutoff_t0 - c_ts).total_seconds() / (3600.0 * 24.0)

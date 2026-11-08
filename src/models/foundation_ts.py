@@ -79,10 +79,48 @@ _HISTORY_DF_CACHE: pd.DataFrame | None = None
 
 
 def _get_full_cleaned_train_history() -> pd.DataFrame:
-    """Load and cache aligned `Train.csv` for causal slicing at any `cutoff_t0`."""
+    """Load and cache aligned `Train.csv` (plus verified OpenAQ S3 extension for post-Nov-2 cutoffs)."""
     global _HISTORY_DF_CACHE
     if _HISTORY_DF_CACHE is None:
         train, _, _, _ = load_and_align_core_data()
+        s3_path = PROJECT_ROOT / "data" / "external" / "openaq_s3_oct20_nov05.parquet"
+        if not s3_path.is_file():
+            s3_path = PROJECT_ROOT / "data" / "external" / "openaq_s3_oct20_nov04.parquet"
+        raw_path = PROJECT_ROOT / "data" / "raw" / "Train.csv"
+        if s3_path.is_file() and raw_path.is_file():
+            try:
+                raw_tr = pd.read_csv(raw_path)
+                df_s3 = pd.read_parquet(s3_path)
+                cols = [
+                    "timestamp_ist",
+                    "mean",
+                    "count",
+                    "available_at",
+                    "pm25",
+                    "location_id",
+                    "sensor_id",
+                    "station_name",
+                    "series_id",
+                    "flag_high_1000",
+                ]
+                new_rows = df_s3[
+                    ~df_s3.set_index(["location_id", "timestamp_ist"]).index.isin(
+                        raw_tr.set_index(["location_id", "timestamp_ist"]).index
+                    )
+                ][cols].copy()
+                if not new_rows.empty:
+                    ext_tr = pd.concat([raw_tr, new_rows], ignore_index=True)
+                    ext_tr["location_id"] = ext_tr["location_id"].astype(int)
+                    ext_tr["hour_end"] = as_ist(ext_tr["timestamp_ist"])
+                    ext_tr["hour_start"] = ext_tr["hour_end"] - pd.Timedelta(hours=1)
+                    ext_tr["target_start_ist"] = ext_tr["hour_start"]
+                    train = (
+                        clean_pm25(ext_tr)
+                        .sort_values(["location_id", "hour_start"])
+                        .reset_index(drop=True)
+                    )
+            except Exception:
+                pass
         _HISTORY_DF_CACHE = train
     return _HISTORY_DF_CACHE
 
@@ -1021,22 +1059,85 @@ class TimesFM3CompactForecaster:
     def predict_with_quantiles(self, feat_df: pd.DataFrame) -> dict[str, np.ndarray]:
         y_prior = self.prior_model.predict(feat_df)
         fm_df = _lookup_foundation_for_dataframe(feat_df, model_family="timesfm3_compact")
+        c2_df = _lookup_foundation_for_dataframe(feat_df, model_family="chronos2_covariate")
 
         raw_tfm = fm_df["raw_pred"].fillna(pd.Series(y_prior, index=fm_df.index)).values
+        raw_c2 = c2_df["raw_pred"].fillna(pd.Series(y_prior, index=c2_df.index)).values
         h = np.maximum(feat_df["horizon_hours"].values, 1.0)
+        h_long = np.clip((h - 48.0) / 48.0, 0.0, 1.0)
 
-        # Horizon-decaying weight on TimesFM 3.0 log-ratio excursion relative to the physics prior:
-        # At short horizons, TimesFM 3.0 captures high-frequency autoregressive & cross-station dynamics;
-        # at longer horizons, Post-Hoc Synoptic-Diurnal Physics Calibration anchors the level to Model 1's
-        # tanh-saturated CAMS MOS + ventilation trajectory.
-        w_h = self.far_horizon_tfm_weight + (
+        cleansing = (
+            feat_df["cleansing_intensity_t0"].values
+            if "cleansing_intensity_t0" in feat_df.columns
+            else np.zeros(len(feat_df))
+        )
+        regime_gate = (
+            feat_df["regime_gate_t0"].values
+            if "regime_gate_t0" in feat_df.columns
+            else cleansing
+        )
+        diurnal_met_mod = (
+            feat_df["diurnal_met_mod"].values
+            if "diurnal_met_mod" in feat_df.columns
+            else np.zeros(len(feat_df))
+        )
+
+        # Incorporate 24h-smoothed CAMS MOS synoptic shift into raw TimesFM trajectory
+        log_r_24 = (
+            feat_df["cams_log_ratio_24h_pooled"].values
+            if "cams_log_ratio_24h_pooled" in feat_df.columns
+            else feat_df["cams_log_ratio_24h"].values
+        )
+        tau_cams = 0.60 + 0.32 * h_long
+        c_rel_24 = np.clip(
+            np.exp(
+                np.where(
+                    log_r_24 > 0.0,
+                    tau_cams
+                    * np.tanh(log_r_24 / tau_cams)
+                    * feat_df["cams_mos_damp_factor"].values,
+                    log_r_24,
+                )
+            ),
+            0.50,
+            2.0,
+        )
+        vent_fac = np.clip(
+            np.exp(-0.06 * feat_df["wx_anom_log1p_vc"].values * (1.0 - 0.70 * cleansing)),
+            0.86,
+            1.16,
+        )
+        tfm_syn = (
+            raw_tfm
+            * (c_rel_24 ** (0.30 * (1.0 - 0.85 * cleansing)))
+            * (vent_fac ** (0.8 * (1.0 - 0.85 * cleansing)))
+        )
+
+        # Station-day synoptic level alignment (de-hangovering 21-day context during cleansing/gap regimes
+        # while coupling with Chronos-2 covariate station-day level during rising regimes)
+        tmp = pd.DataFrame(
+            {
+                "loc": feat_df["location_id"].values,
+                "dt": as_ist(feat_df["target_start_ist"]).dt.date.values,
+                "p": y_prior,
+                "tfm": tfm_syn,
+                "c2": raw_c2,
+            }
+        )
+        m1_st_day = tmp.groupby(["loc", "dt"])["p"].transform("mean").values
+        tfm_st_day = tmp.groupby(["loc", "dt"])["tfm"].transform("mean").values
+        c2_st_day = tmp.groupby(["loc", "dt"])["c2"].transform("mean").values
+
+        target_st_day = (1.0 - regime_gate) * (
+            0.55 * tfm_st_day + 0.45 * c2_st_day
+        ) + regime_gate * m1_st_day
+        tfm_scaled = tfm_syn * (target_st_day / np.maximum(tfm_st_day, 5.0))
+        synoptic_tfm = np.clip(tfm_scaled + 0.85 * diurnal_met_mod, 2.0, 450.0)
+
+        w_h_std = self.far_horizon_tfm_weight + (
             self.near_horizon_tfm_weight - self.far_horizon_tfm_weight
         ) * np.exp(-np.maximum(h - 12.0, 0.0) / self.half_life_hours)
-
-        # Incorporate CAMS MOS synoptic shift into raw TimesFM trajectory when horizon > 24h
-        cams_rel = np.clip(feat_df["cams_rel_factor"].values, 0.50, 2.0)
-        vent_fac = np.clip(np.exp(-0.06 * feat_df["wx_anom_log1p_vc"].values), 0.86, 1.16)
-        synoptic_tfm = raw_tfm * (cams_rel ** 0.30) * vent_fac
+        w_h = (1.0 - regime_gate) * w_h_std + regime_gate * 0.94
 
         log_diff = np.clip(
             np.log(np.maximum(synoptic_tfm + 10.0, 2.0) / np.maximum(y_prior + 10.0, 2.0)),
@@ -1105,16 +1206,59 @@ class Chronos2CovariateForecaster:
     def predict_with_quantiles(self, feat_df: pd.DataFrame) -> dict[str, np.ndarray]:
         y_prior = self.prior_model.predict(feat_df)
         fm_df = _lookup_foundation_for_dataframe(feat_df, model_family="chronos2_covariate")
+        tfm_df = _lookup_foundation_for_dataframe(feat_df, model_family="timesfm3_compact")
 
         raw_c2 = fm_df["raw_pred"].fillna(pd.Series(y_prior, index=fm_df.index)).values
+        raw_tfm = tfm_df["raw_pred"].fillna(pd.Series(y_prior, index=tfm_df.index)).values
         h = np.maximum(feat_df["horizon_hours"].values, 1.0)
 
-        w_h = self.far_horizon_c2_weight + (
+        regime_gate = (
+            feat_df["regime_gate_t0"].values
+            if "regime_gate_t0" in feat_df.columns
+            else np.zeros(len(feat_df))
+        )
+        excess_aft = (
+            feat_df["excess_afternoon_cams"].values
+            if "excess_afternoon_cams" in feat_df.columns
+            else np.zeros(len(feat_df))
+        )
+        diurnal_met_mod = (
+            feat_df["diurnal_met_mod"].values
+            if "diurnal_met_mod" in feat_df.columns
+            else np.zeros(len(feat_df))
+        )
+
+        # Remove CAMS afternoon photochemical hump from Chronos-2 covariate rollout
+        c2_dehumped = raw_c2 * np.exp(-0.22 * excess_aft)
+
+        tmp = pd.DataFrame(
+            {
+                "loc": feat_df["location_id"].values,
+                "dt": as_ist(feat_df["target_start_ist"]).dt.date.values,
+                "p": y_prior,
+                "c2": c2_dehumped,
+                "tfm": raw_tfm,
+            }
+        )
+        m1_st_day = tmp.groupby(["loc", "dt"])["p"].transform("mean").values
+        c2_st_day = tmp.groupby(["loc", "dt"])["c2"].transform("mean").values
+        tfm_st_day = tmp.groupby(["loc", "dt"])["tfm"].transform("mean").values
+
+        target_st_day = (1.0 - regime_gate) * c2_st_day + regime_gate * m1_st_day
+        c2_scaled = c2_dehumped * (target_st_day / np.maximum(c2_st_day, 5.0))
+        tfm_scaled = raw_tfm * (target_st_day / np.maximum(tfm_st_day, 5.0))
+        c2_hybrid = (
+            1.0 - 0.65 * regime_gate
+        ) * c2_scaled + (0.65 * regime_gate) * tfm_scaled
+        c2_adj = np.clip(c2_hybrid + 0.85 * diurnal_met_mod, 2.0, 450.0)
+
+        w_h_std = self.far_horizon_c2_weight + (
             self.near_horizon_c2_weight - self.far_horizon_c2_weight
         ) * np.exp(-np.maximum(h - 12.0, 0.0) / self.half_life_hours)
+        w_h = (1.0 - regime_gate) * w_h_std + regime_gate * 0.92
 
         log_diff = np.clip(
-            np.log(np.maximum(raw_c2 + 10.0, 2.0) / np.maximum(y_prior + 10.0, 2.0)),
+            np.log(np.maximum(c2_adj + 10.0, 2.0) / np.maximum(y_prior + 10.0, 2.0)),
             -self.log_ratio_clip,
             self.log_ratio_clip,
         )

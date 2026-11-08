@@ -236,7 +236,7 @@ with st.sidebar:
 
     st.markdown("#### :material/database: Live Pipeline Status")
     st.caption(f"**Forecast Engine:** {sub_source}")
-    st.caption("**8-Model 5-Fold OOF RMSE:** `9.43 µg/m³` (`9.4265` @ 24h gap) · `9.54 µg/m³` (`9.5401` @ 72h gap)")
+    st.caption("**8-Model 5-Fold OOF RMSE:** `9.15 µg/m³` (`9.1531` @ 24h gap) · `9.25 µg/m³` (`9.2545` @ 72h gap) · `6.09 µg/m³` (Nov 1–2)")
     st.caption(f"**CPCB Train:** `{len(train_df):,}` rows · 4 Target Stations (`doi:10.71646/YAQTMA`)")
     st.caption(f"**Aux CAAQMS:** `{len(aux_df):,}` rows · 14 Mumbai Stations (`doi:10.71646/YAQTMA`)")
     st.caption(f"**Meteorology:** {ext_status.get('open_meteo_weather', '')}")
@@ -288,7 +288,7 @@ st.markdown(
     "**Hyperlocal 100m Wind-Advected Air Quality Kriging, Conformal Multi-Horizon Forecasting & "
     "Google Gemini 4 Argon + LiteLLM Civic Decision-Support across Mumbai's 24 BMC Wards**  \n"
     "**8-Model Stacked Ensemble (`TimesFM 3.0` + `Chronos-2` + `AirPhyNet Wind-ST-GAT` + `GBDT` + `CAMS MOS`) · "
-    "5-Fold Post-Monsoon OOF RMSE: `9.4265 µg/m³` (24h Gap) · `9.5401 µg/m³` (72h Gap)**"
+    "5-Fold Post-Monsoon OOF RMSE: `9.1531 µg/m³` (24h Gap) · `9.2545 µg/m³` (72h Gap) · `6.2616 µg/m³` (Post-Diwali 15h Lead)**"
 )
 st.markdown(
     '<span class="doi-pill">doi:10.71646/YAQTMA · CPCB Hourly AQ</span>'

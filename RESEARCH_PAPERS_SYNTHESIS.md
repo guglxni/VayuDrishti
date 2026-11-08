@@ -25,7 +25,7 @@
 | **14** | **Davies (1976), Hampel (1974), Pearson (2002)** — *Hampel Identifier for Time-Series Outlier Filtering* | **JASA 1974 / IEEE 2002** | Breakdown-point-optimal local median + Median Absolute Deviation ($\text{MAD}$) filter identifying transient sensor hardware glitches without smearing genuine atmospheric pollution episodes. | `src/validation.py` (`clean_pm25`: 2-stage `flag_high_1000` / `>450 µg/m³` hardware mask + 7-hour rolling Hampel filter at $4.5 \times 1.4826 \times \text{MAD}$). | Cleans `346` corrupted training hours (`1.37%`) while preserving raw validation targets for exact Zindi scoring. |
 | **15** | **Brown et al. (Google DeepMind, 2025) & Sirko et al. (Google Research, 2021)** — *AlphaEarth Foundations 10m Surface Embeddings* & *Open Buildings V3* | **Google Research 2021–2025** | 64-dimensional 10m satellite surface embeddings (`doi:10.71646/GHSZ7J`) and 0.5m building footprints (`doi:10.71646/EV3RBJ`) capturing urban canyon roughness, vegetation canopy (`SGNP`), and imperviousness. | `app/spatial_catalog.py` & `app/physics_engine.py` (AlphaEarth canopy & building canyon conditioning across 24 BMC Wards). | Enables hyperlocal 100m ward interpolation distinguishing green-belt `Borivali East` from industrial `Shivaji Nagar`. |
 | **16** | **Kumar et al. (NEERI / IIT Bombay, 2021–2025)** — *Source Apportionment, Coastal Land-Sea Breeze & Deonar Plume Dynamics in Mumbai* | **Atmospheric Environment / Urban Climate** | Documents Mumbai's $15^\circ$ NNE–SSW coastal sea-breeze flushing (`285°` WNW onshore vector), nocturnal land-breeze trapping, and `75°` ENE Deonar landfill drainage into `Shivaji Nagar (M/E Ward)`. | `src/features.py` (`onshore_breeze`, `deonar_wind_cos`, `thane_creek_wind_cos`, `deonar_transport_proxy`, `stagnation_hours`). | `deonar_transport_proxy` and `wx_anom_log1p_vc` rank among the top physical split features in `Model 3–5`. |
-| **17** | **Breiman (1996) & Clarke (2003)** — *Stacked Regressions on the Simplex under Paradigm Misspecification* | **Machine Learning 1996 / Bayesian Analysis 2003** | Convex combination $\hat{y}_{\text{ens}} = \sum_{m=1}^M w_m \hat{y}_m$ on the probability simplex ($w_m \ge w_{\min} > 0, \sum w_m = 1$) strictly reduces ensemble variance by $\sum_{m<k} w_m w_k \mathbb{E}[(\hat{y}_m - \hat{y}_k)^2]$ (Ambiguity Decomposition). | `src/ensemble.py` (`StackedAirQualityEnsemble.optimize_weights_on_oof`: constrained `SLSQP` + `Nelder-Mead` simplex refinement). | Achieves **`9.4265 µg/m³`** (`gap=24h`) and **`9.5401 µg/m³`** (`gap=72h`), beating every single model! |
+| **17** | **Breiman (1996) & Clarke (2003)** — *Stacked Regressions on the Simplex under Paradigm Misspecification* | **Machine Learning 1996 / Bayesian Analysis 2003** | Convex combination $\hat{y}_{\text{ens}} = \sum_{m=1}^M w_m \hat{y}_m$ on the probability simplex ($w_m \ge w_{\min} > 0, \sum w_m = 1$) strictly reduces ensemble variance by $\sum_{m<k} w_m w_k \mathbb{E}[(\hat{y}_m - \hat{y}_k)^2]$ (Ambiguity Decomposition). | `src/ensemble.py` (`StackedAirQualityEnsemble.optimize_weights_on_oof`: constrained `SLSQP` + `Nelder-Mead` simplex refinement). | Achieves **`9.1531 µg/m³`** (`gap=24h`) and **`9.2545 µg/m³`** (`gap=72h`), beating every single model! |
 | **18** | **AWS Labs (2025–2026)** — *AI-Driven Development Life Cycle (`AI-DLC v2`)* | **AWS Labs Open Source (`awslabs/aidlc-workflows`)** | Spec-driven agentic engineering (`Inception -> Construction -> Operations`), formal EARS requirements, Architecture Decision Records (ADRs), and automated verification gates. | `.aidlc/` (`intent.md`, `units_of_work.md`, `domain_model.md`, `adr_log.md`, `verification_and_ops.md`), `AGENTS.md`, `CLAUDE.md`. Cloned in `external_repos/aidlc-workflows`. | Guarantees zero data leakage (`hour_end <= cutoff_t0`) and 100% reproducible Zindi submissions. |
 
 ---
@@ -93,15 +93,15 @@ Evaluated across `N = 888` observed station-hours (`Oct 12–21, 2026`, 5 rollin
 | — | `0. 90-Day Station Mean Reference` | `src/ensemble.py` | `37.9949` | `37.4109` | `-171.94%` |
 | Baseline | `1. Starter Notebook Random Forest (90d)` | `src/validation.py` | `13.9719` | `13.3067` | `0.00%` |
 | Baseline | `2. 7-Day Diurnal Shrinkage Baseline` | `src/validation.py` | `14.2873` | `13.6809` | `-2.26%` |
-| **Model 1** | `Synoptic-Diurnal + tanh-MOS CAMS Prior` | `src/models/priors_and_linear.py` | `10.1644` | `10.0305` | `+27.25%` |
-| **Model 2** | `Dual-Scale Huber/Ridge/Duan + AnEn GAM` | `src/models/priors_and_linear.py` | `9.7635` | `9.7046` | `+30.12%` |
-| **Model 3** | `LightGBM Residual Forecaster (L2 + Huber)` | `src/models/gbdt_zoo.py` | `10.6028` | `10.4846` | `+24.11%` |
-| **Model 4** | `CatBoost Oblivious-Tree Residual Forecaster` | `src/models/gbdt_zoo.py` | `10.4065` | `10.3194` | `+25.52%` |
-| **Model 5** | `XGBoost Depth-Regularized Residual Forecaster` | `src/models/gbdt_zoo.py` | `10.6407` | `10.5083` | `+23.84%` |
-| **Model 6** | `Wind-Guided ST-GAT (PyTorch Advection Graph)` | `src/models/st_gat.py` | `10.8399` | `10.7927` | `+22.42%` |
-| **Model 7** | `Google TimesFM 3.0 Compact Multi-View` | `src/models/foundation_ts.py` | `9.9981` | `9.8159` | `+28.44%` |
-| **Model 8** | `Amazon Chronos-2 Multivariate + Covariates` | `src/models/foundation_ts.py` | `9.5415` | `9.4822` | `+31.71%` |
-| **Ensemble** | **`Optimal 8-Model Stacked Ensemble (SLSQP + Shrinkage)`** | `src/ensemble.py` | **`9.4265`** | **`9.4027`** | **`+32.53%`** |
+| **Model 1** | `Synoptic-Diurnal + tanh-MOS CAMS Prior` | `src/models/priors_and_linear.py` | `9.7752` | `9.6084` | `+30.04%` |
+| **Model 2** | `Dual-Scale Huber/Ridge/Duan + AnEn GAM` | `src/models/priors_and_linear.py` | `9.3648` | `9.3111` | `+32.97%` |
+| **Model 3** | `LightGBM Residual Forecaster (L2 + Huber)` | `src/models/gbdt_zoo.py` | `10.4840` | `10.3782` | `+24.96%` |
+| **Model 4** | `CatBoost Oblivious-Tree Residual Forecaster` | `src/models/gbdt_zoo.py` | `10.3284` | `10.2216` | `+26.08%` |
+| **Model 5** | `XGBoost Depth-Regularized Residual Forecaster` | `src/models/gbdt_zoo.py` | `10.5744` | `10.4608` | `+24.32%` |
+| **Model 6** | `Wind-Guided ST-GAT (PyTorch Advection Graph)` | `src/models/st_gat.py` | `10.2420` | `10.1590` | `+26.70%` |
+| **Model 7** | `Google TimesFM 3.0 Compact Multi-View` | `src/models/foundation_ts.py` | `9.6379` | `9.4844` | `+31.02%` |
+| **Model 8** | `Amazon Chronos-2 Multivariate + Covariates` | `src/models/foundation_ts.py` | `9.3604` | `9.2775` | `+33.01%` |
+| **Ensemble** | **`Optimal 8-Model Stacked Ensemble (SLSQP + Shrinkage)`** | `src/ensemble.py` | **`9.1531`** | **`9.1313`** | **`+34.49%`** |
 
 ### 3.2 Multi-Day Reporting Gap (`gap = 72h`, Matching 3-Day Lead Horizon)
 
@@ -110,15 +110,15 @@ Evaluated across `N = 888` observed station-hours (`Oct 12–21, 2026`, 5 rollin
 | — | `0. 90-Day Station Mean Reference` | `src/ensemble.py` | `38.8708` | `38.3029` | `-117.47%` |
 | Baseline | `1. Starter Notebook Random Forest (90d)` | `src/validation.py` | `17.8742` | `16.4791` | `0.00%` |
 | Baseline | `2. 7-Day Diurnal Shrinkage Baseline` | `src/validation.py` | `16.6453` | `15.5763` | `+6.88%` |
-| **Model 1** | `Synoptic-Diurnal + tanh-MOS CAMS Prior` | `src/models/priors_and_linear.py` | `10.5181` | `10.3408` | `+41.15%` |
-| **Model 2** | `Dual-Scale Huber/Ridge/Duan + AnEn GAM` | `src/models/priors_and_linear.py` | `10.2126` | `10.1240` | `+42.86%` |
-| **Model 3** | `LightGBM Residual Forecaster (L2 + Huber)` | `src/models/gbdt_zoo.py` | `11.1233` | `11.0830` | `+37.77%` |
-| **Model 4** | `CatBoost Oblivious-Tree Residual Forecaster` | `src/models/gbdt_zoo.py` | `10.6291` | `10.5680` | `+40.53%` |
-| **Model 5** | `XGBoost Depth-Regularized Residual Forecaster` | `src/models/gbdt_zoo.py` | `11.4982` | `11.4824` | `+35.67%` |
-| **Model 6** | `Wind-Guided ST-GAT (PyTorch Advection Graph)` | `src/models/st_gat.py` | `10.2786` | `10.2218` | `+42.49%` |
-| **Model 7** | `Google TimesFM 3.0 Compact Multi-View` | `src/models/foundation_ts.py` | `10.6484` | `10.4314` | `+40.43%` |
-| **Model 8** | `Amazon Chronos-2 Multivariate + Covariates` | `src/models/foundation_ts.py` | `10.0128` | `9.9094` | `+43.98%` |
-| **Ensemble** | **`Optimal 8-Model Stacked Ensemble (SLSQP + Shrinkage)`** | `src/ensemble.py` | **`9.5401`** | **`9.5130`** | **`+46.63%`** |
+| **Model 1** | `Synoptic-Diurnal + tanh-MOS CAMS Prior` | `src/models/priors_and_linear.py` | `10.0666` | `9.8771` | `+43.68%` |
+| **Model 2** | `Dual-Scale Huber/Ridge/Duan + AnEn GAM` | `src/models/priors_and_linear.py` | `9.7165` | `9.6830` | `+45.64%` |
+| **Model 3** | `LightGBM Residual Forecaster (L2 + Huber)` | `src/models/gbdt_zoo.py` | `10.8747` | `10.8642` | `+39.16%` |
+| **Model 4** | `CatBoost Oblivious-Tree Residual Forecaster` | `src/models/gbdt_zoo.py` | `10.8312` | `10.8343` | `+39.40%` |
+| **Model 5** | `XGBoost Depth-Regularized Residual Forecaster` | `src/models/gbdt_zoo.py` | `11.4180` | `11.4395` | `+36.12%` |
+| **Model 6** | `Wind-Guided ST-GAT (PyTorch Advection Graph)` | `src/models/st_gat.py` | `9.8261` | `9.7882` | `+45.03%` |
+| **Model 7** | `Google TimesFM 3.0 Compact Multi-View` | `src/models/foundation_ts.py` | `10.1333` | `9.9483` | `+43.31%` |
+| **Model 8** | `Amazon Chronos-2 Multivariate + Covariates` | `src/models/foundation_ts.py` | `9.7299` | `9.6099` | `+45.56%` |
+| **Ensemble** | **`Optimal 8-Model Stacked Ensemble (SLSQP + Shrinkage)`** | `src/ensemble.py` | **`9.2545`** | **`9.2464`** | **`+48.22%`** |
 
 ---
 

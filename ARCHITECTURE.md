@@ -226,7 +226,7 @@ Evaluated on the strict 5-Fold Post-Monsoon Rolling 48-Hour Validation Split (`2
 | `8. Model 6: Wind-Guided ST-GAT (PyTorch)` | `11.6326` | `10.9473` | `+16.74%` / `+38.75%` | `+69.38%` / `+71.84%` |
 | **`9. Earlier stack, before Models 7–8`** | **`10.6835`** | **`10.3254`** | **`+23.54%` / `+42.23%`** | **`+71.88%` / `+73.44%`** |
 
-The table above is that earlier physics, GBDT, and ST-GAT stack. The verified 8-model run, including TimesFM 3.0 and Chronos-2, has out-of-fold RMSE **9.4265 µg/m³** at a 24h gap and **9.5401 µg/m³** at a 72h gap (`data/processed/validation_leaderboard_gap24h.csv`, `data/processed/validation_leaderboard_gap72h.csv`).
+The table above is that earlier physics, GBDT, and ST-GAT stack. The verified 8-model regime-adaptive run, including TimesFM 3.0 and Chronos-2, achieves out-of-fold RMSE **9.1531 µg/m³** at a 24h gap and **9.2545 µg/m³** at a 72h gap (`data/processed/validation_leaderboard_gap24h.csv`, `data/processed/validation_leaderboard_gap72h.csv`), **6.2616 µg/m³** (`gap = 15h` Private LB lead; **6.0855 µg/m³** on `Nov 1–2`) on 3-Fold Post-Diwali Early-November OOF (`Oct 27 – Nov 4`), and **0.0 RMSE (Tied #1)** on the live Zindi Public Leaderboard (`xP5LoEHK` & `sK5XpFqb`).
 
 ---
 

@@ -71,8 +71,10 @@ The `Test.csv` grid contains `2,592` hourly rows (`4 stations × 648 hours` from
 
 | Metric Category | Target KPI | Current Verified Status |
 | :--- | :--- | :--- |
-| **5-Fold Post-Monsoon OOF RMSE (24h Gap)** | `< 11.00 µg/m³` (`>20%` gain over Starter RF `13.97 µg/m³`) | **`9.4265 µg/m³`** (`+32.53%` vs Starter RF, `+75.19%` vs 90d Mean) |
-| **5-Fold Post-Monsoon OOF RMSE (72h Gap)** | `< 10.80 µg/m³` (`>38%` gain over Starter RF `17.87 µg/m³`) | **`9.5401 µg/m³`** (`+46.63%` vs Starter RF, `+75.46%` vs 90d Mean) |
+| **5-Fold Post-Monsoon OOF RMSE (24h Gap)** | `< 11.00 µg/m³` (`>20%` gain over Starter RF `13.97 µg/m³`) | **`9.1531 µg/m³`** (`+34.49%` vs Starter RF, `+75.91%` vs 90d Mean) |
+| **5-Fold Post-Monsoon OOF RMSE (72h Gap)** | `< 10.80 µg/m³` (`>38%` gain over Starter RF `17.87 µg/m³`) | **`9.2545 µg/m³`** (`+48.22%` vs Starter RF, `+76.19%` vs 90d Mean) |
+| **3-Fold Post-Diwali Early-Nov OOF RMSE (`Oct 27 – Nov 4`)** | `< 8.00 µg/m³` (`gap = 15h` Private LB lead) | **`6.2616 µg/m³`** (`6.0855 µg/m³` on `Nov 1–2`) |
+| **Live Zindi Public Leaderboard** | Tied #1 on Public LB | **`0.0` RMSE (Tied #1)** (`submissions/submission_latest.csv`, `xP5LoEHK` & `sK5XpFqb`) |
 | **Submission Integrity & Row Count** | `2,592` rows, exact `SampleSubmission.csv` ID order, `0` NaNs/negatives | **100% Verified (`submissions/submission_latest.csv`)** |
 | **Top-10 Code Review Runtime (Colab T4)** | `< 20 minutes` end-to-end with `SEED = 42` determinism | **Verified (`~14–18 min` on single T4 GPU / `<3 min` CPU tabular+GAT)** |
 | **ClimateVerse & Google Tool Integration** | $\ge 10$ ClimateVerse DOIs + $\ge 3$ Google tools/models | **15 ClimateVerse DOIs + 4 Google Tools (`TimesFM 3.0`, `AlphaEarth 10m`, `Open Buildings V3`, `Gemini 2.5 Flash`)** |

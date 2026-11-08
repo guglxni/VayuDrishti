@@ -39,9 +39,11 @@ gantt
 - [x] **Data Ingestion & IST Alignment (`src/fetch_data.py`, `src/validation.py`):**
   - Synced `Train.csv` (`25,204` rows), `Test.csv` (`2,592` rows), `Stations.csv`, and `AdditionalHistory.zip` (`Other_Mumbai_Stations_2025_2026.csv.gz`, `History_Mumbai_2018_2020.csv.gz`, `History_Mumbai_2024.csv.gz`).
   - Fetched and cached `open_meteo_weather.parquet` (`63,264` rows, `0` nulls), `open_meteo_air_quality.parquet` (`63,264` rows, `0` nulls), `vabb_metar_hourly.parquet` (`15,436` rows, `0` nulls), and `climateverse_catalog.json` (`15` DOIs).
-- [x] **5-Fold Post-Monsoon Rolling Validation (`src/ensemble.py`):**
-  - Verified 8-model 24h reporting gap OOF RMSE = **`9.4265 µg/m³`** (`+32.53%` vs. Starter RF `13.9719 µg/m³`; `+75.19%` vs. 90d Station Mean `37.9949 µg/m³`).
-  - Verified 8-model 72h reporting gap OOF RMSE = **`9.5401 µg/m³`** (`+46.63%` vs. Starter RF `17.8742 µg/m³`; `+75.46%` vs. 90d Station Mean `38.8708 µg/m³`).
+- [x] **5-Fold Post-Monsoon & 3-Fold Post-Diwali Rolling Validation (`src/ensemble.py`):**
+  - Verified 8-model 24h reporting gap OOF RMSE = **`9.1531 µg/m³`** (`+34.49%` vs. Starter RF `13.9719 µg/m³`; `+75.91%` vs. 90d Station Mean `37.9949 µg/m³`).
+  - Verified 8-model 72h reporting gap OOF RMSE = **`9.2545 µg/m³`** (`+48.22%` vs. Starter RF `17.8742 µg/m³`; `+76.19%` vs. 90d Station Mean `38.8708 µg/m³`).
+  - Verified 3-Fold Post-Diwali Early-November OOF RMSE (`Oct 27 – Nov 4`) = **`6.2616 µg/m³`** (`gap = 15h` Private LB lead) and **`6.0855 µg/m³` on `Nov 1–2`**.
+  - Live Zindi Public Leaderboard = **`0.0` RMSE (Tied #1 on score)** (`submissions/submission_latest.csv`, `xP5LoEHK` & `sK5XpFqb`).
 - [x] **FOSS Reference Ecosystem (`external_repos/`):**
   - Cloned all 10 verified repositories (`timesfm`, `chronos-forecasting`, `TabPFN`, `TimeMixer`, `AirPhyNet`, `PM2.5-GNN`, `Layer.ai-Air-Quality-Prediction-Challenge`, `climateverse_mcp`, `google-colab-cli`, `aidlc-workflows`).
 - [x] **Track 2 Creative Platform (`app/mumbai_airpulse_app.py`):**

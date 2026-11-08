@@ -2,12 +2,12 @@ model_key,Model,OOF_RMSE,Mean_Fold_RMSE,Std_Fold_RMSE,Fold1_Oct12_13,Fold2_Oct14
 b0_station_mean_90d,0. 90-Day Station Mean Reference (Starter Benchmark Proxy),37.9949,37.4109,7.9204,24.581,32.984,46.151,44.568,38.769,0.0,-171.94
 b1_starter_rf_90d,1. Starter Notebook Random Forest Baseline (90d window),13.9719,13.3067,3.5873,11.113,16.107,18.897,10.995,9.422,63.23,0.0
 b2_diurnal_shrinkage_7d,2. 7-day Diurnal Shrinkage Baseline,14.2873,13.6809,3.8608,10.962,13.286,20.628,14.149,9.379,62.4,-2.26
-m1_calibrated_cams_prior,3. Synoptic-Diurnal + tanh-MOS CAMS Prior (Model 1),10.1644,10.0305,1.6074,8.117,12.655,9.986,10.734,8.661,73.25,27.25
-m2_huber_ridge_gam,4. Dual-Scale Huber/Ridge/Duan + AnEn GAM (Model 2),9.7635,9.7046,1.5594,8.033,11.51,9.114,11.614,8.252,74.3,30.12
-m3_lightgbm_residual,5. LightGBM Residual Forecaster (Model 3),10.6028,10.4846,1.2156,9.382,12.503,11.167,10.107,9.264,72.09,24.11
-m4_catboost_residual,6. CatBoost Residual Forecaster (Model 4),10.4065,10.3194,1.2269,9.213,12.267,10.645,10.663,8.808,72.61,25.52
-m5_xgboost_residual,7. XGBoost Residual Forecaster (Model 5),10.6407,10.5083,1.2735,9.644,12.61,11.252,9.982,9.054,71.99,23.84
-m6_wind_st_gat,8. Wind-Guided ST-GAT (PyTorch) (Model 6),10.8399,10.7927,1.8412,8.622,11.804,11.03,13.57,8.938,71.47,22.42
-m7_timesfm3_compact,9. Google TimesFM 3.0 Compact Multi-View (Model 7),9.9981,9.8159,1.5846,8.229,12.689,10.118,9.482,8.561,73.69,28.44
-m8_chronos2_covariate,10. Amazon Chronos-2 Multivariate + Covariates (Model 8),9.5415,9.4822,0.9449,8.841,11.182,9.291,9.662,8.435,74.89,31.71
-m7_stacked_ensemble,11. Optimal 8-Model Stacked Ensemble (SLSQP + Station Shrinkage),9.4265,9.4027,1.0321,8.395,10.809,8.896,10.474,8.439,75.19,32.53
+m1_calibrated_cams_prior,3. Synoptic-Diurnal + tanh-MOS CAMS Prior (Model 1),9.7752,9.6084,1.5867,7.754,12.224,10.152,9.717,8.195,74.27,30.04
+m2_huber_ridge_gam,4. Dual-Scale Huber/Ridge/Duan + AnEn GAM (Model 2),9.3648,9.3111,1.4231,7.58,10.927,9.032,10.986,8.032,75.35,32.97
+m3_lightgbm_residual,5. LightGBM Residual Forecaster (Model 3),10.484,10.3782,1.0905,9.262,12.094,11.186,9.91,9.439,72.41,24.96
+m4_catboost_residual,6. CatBoost Residual Forecaster (Model 4),10.3284,10.2216,1.1785,9.038,11.997,11.083,10.04,8.95,72.82,26.08
+m5_xgboost_residual,7. XGBoost Residual Forecaster (Model 5),10.5744,10.4608,1.1072,9.442,12.338,11.103,9.832,9.589,72.17,24.32
+m6_wind_st_gat,8. Wind-Guided ST-GAT (PyTorch) (Model 6),10.242,10.159,1.7661,7.885,11.61,10.69,12.304,8.306,73.04,26.7
+m7_timesfm3_compact,9. Google TimesFM 3.0 Compact Multi-View (Model 7),9.6379,9.4844,1.3473,8.196,11.797,10.152,8.951,8.327,74.63,31.02
+m8_chronos2_covariate,10. Amazon Chronos-2 Multivariate + Covariates (Model 8),9.3604,9.2775,0.9141,8.768,10.961,9.44,8.897,8.322,75.36,33.01
+m7_stacked_ensemble,11. Optimal 8-Model Stacked Ensemble (SLSQP + Station Shrinkage),9.1531,9.1313,0.9417,7.989,10.355,8.933,10.08,8.3,75.91,34.49

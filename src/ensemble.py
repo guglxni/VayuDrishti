@@ -188,15 +188,62 @@ class StackedAirQualityEnsemble:
     def predict_individual(self, feat_df: pd.DataFrame) -> dict[str, np.ndarray]:
         tfm_out = self.m7_.predict_with_quantiles(feat_df)
         c2_out = self.m8_.predict_with_quantiles(feat_df)
+        p_m1 = self.m1_.predict(feat_df)
+        p_m2 = self.m2_.predict(feat_df)
+        p_m3 = self.m3_.predict(feat_df)
+        p_m4 = self.m4_.predict(feat_df)
+        p_m5 = self.m5_.predict(feat_df)
+        p_m6 = self.m6_.predict(feat_df)
+        p_m7 = tfm_out["pred"]
+        p_m8 = c2_out["pred"]
+
+        # Regime-aware station-day de-drifting for residual models (M2..M6) during post-episode cleansing:
+        # When training cutoffs span a rising buildup (e.g. Oct 5-23) and the forecast cutoff enters a
+        # cleansing/flushing regime (regime_gate_t0 > 0), remove the rising-window station-day drift
+        # from M2..M6 while preserving their within-day diurnal residual innovations.
+        if "regime_gate_t0" in feat_df.columns and np.any(feat_df["regime_gate_t0"].values > 0.05):
+            rg = np.clip(feat_df["regime_gate_t0"].values, 0.0, 1.0)
+            tmp = pd.DataFrame(
+                {
+                    "loc": feat_df["location_id"].values,
+                    "dt": pd.to_datetime(feat_df["target_start_ist"]).dt.date.values,
+                    "m1": p_m1,
+                    "m2": p_m2,
+                    "m3": p_m3,
+                    "m4": p_m4,
+                    "m5": p_m5,
+                    "m6": p_m6,
+                    "m7": p_m7,
+                }
+            )
+            grp = tmp.groupby(["loc", "dt"])
+            m1_st = grp["m1"].transform("mean").values
+            m7_st = grp["m7"].transform("mean").values
+            clean_st_anchor = 0.20 * m1_st + 0.80 * m7_st
+            m7_dm = p_m7 - m7_st
+
+            def _dedrift_residual_model(p_mod: np.ndarray, col: str, dm_blend: float = 0.78) -> np.ndarray:
+                mod_st = grp[col].transform("mean").values
+                mod_dm = p_mod - mod_st
+                target_st = (1.0 - 0.96 * rg) * mod_st + (0.96 * rg) * clean_st_anchor
+                combined_dm = (1.0 - dm_blend * rg) * mod_dm + (dm_blend * rg) * m7_dm
+                return np.asarray(np.clip(target_st + combined_dm, 2.0, 450.0), dtype=float)
+
+            p_m2 = _dedrift_residual_model(p_m2, "m2", dm_blend=0.72)
+            p_m3 = _dedrift_residual_model(p_m3, "m3", dm_blend=0.78)
+            p_m4 = _dedrift_residual_model(p_m4, "m4", dm_blend=0.78)
+            p_m5 = _dedrift_residual_model(p_m5, "m5", dm_blend=0.78)
+            p_m6 = _dedrift_residual_model(p_m6, "m6", dm_blend=0.78)
+
         return {
-            "m1_calibrated_cams_prior": self.m1_.predict(feat_df),
-            "m2_huber_ridge_gam": self.m2_.predict(feat_df),
-            "m3_lightgbm_residual": self.m3_.predict(feat_df),
-            "m4_catboost_residual": self.m4_.predict(feat_df),
-            "m5_xgboost_residual": self.m5_.predict(feat_df),
-            "m6_wind_st_gat": self.m6_.predict(feat_df),
-            "m7_timesfm3_compact": tfm_out["pred"],
-            "m8_chronos2_covariate": c2_out["pred"],
+            "m1_calibrated_cams_prior": p_m1,
+            "m2_huber_ridge_gam": p_m2,
+            "m3_lightgbm_residual": p_m3,
+            "m4_catboost_residual": p_m4,
+            "m5_xgboost_residual": p_m5,
+            "m6_wind_st_gat": p_m6,
+            "m7_timesfm3_compact": p_m7,
+            "m8_chronos2_covariate": p_m8,
             # Uncertainty fan quantiles for downstream Streamlit & notebook diagnostics
             "tfm3_q10": tfm_out["q10"],
             "tfm3_q25": tfm_out["q25"],
@@ -217,10 +264,11 @@ class StackedAirQualityEnsemble:
         prior_anchor: np.ndarray,
         location_ids: np.ndarray,
         horizon_hours: np.ndarray | None = None,
+        regime_gate: np.ndarray | None = None,
     ) -> np.ndarray:
         """
         Apply Station-Specific & Horizon-Decaying Variance Shrinkage $\alpha_s(h_{\text{lead}})$
-        toward the conditional physics prior, plus station bias calibration.
+        toward the conditional physics prior, plus regime-aware station bias calibration.
         """
         out = np.zeros_like(raw_blend, dtype=float)
         locs = np.asarray(location_ids, dtype=int)
@@ -230,12 +278,22 @@ class StackedAirQualityEnsemble:
         else:
             h_decay = np.ones_like(raw_blend, dtype=float)
 
+        rg = (
+            np.clip(np.asarray(regime_gate, dtype=float), 0.0, 1.0)
+            if regime_gate is not None
+            else np.zeros_like(raw_blend, dtype=float)
+        )
+
         for st_id in STATION_ORDER:
             mask = locs == st_id
             if not np.any(mask):
                 continue
-            alpha_s = float(self.station_alphas_.get(st_id, self.shrinkage_alpha_)) * h_decay[mask]
-            shift_s = float(self.station_shifts_.get(st_id, self.intercept_shift_))
+            base_alpha = float(self.station_alphas_.get(st_id, self.shrinkage_alpha_))
+            eff_alpha = 1.0 + (base_alpha - 1.0) * (1.0 - 0.92 * rg[mask])
+            alpha_s = eff_alpha * h_decay[mask]
+            base_shift = float(self.station_shifts_.get(st_id, self.intercept_shift_))
+            # Damp rising-regime station shifts during cleansing/flushing regimes
+            shift_s = base_shift * (1.0 - 0.95 * rg[mask])
             out[mask] = (
                 alpha_s * raw_blend[mask]
                 + (1.0 - alpha_s) * prior_anchor[mask]
@@ -375,11 +433,25 @@ class StackedAirQualityEnsemble:
         mat = np.column_stack([indiv[name] for name in MODEL_ZOO_NAMES])
         raw_blend = mat @ self.weights_
         p_anchor = 0.55 * indiv["m1_calibrated_cams_prior"] + 0.45 * indiv["m2_huber_ridge_gam"]
+        if "regime_gate_t0" in feat_df.columns:
+            rg = np.clip(feat_df["regime_gate_t0"].values, 0.0, 1.0)
+            p_clean_blend = (
+                0.04 * indiv["m1_calibrated_cams_prior"]
+                + 0.12 * indiv["m3_lightgbm_residual"]
+                + 0.24 * indiv["m6_wind_st_gat"]
+                + 0.45 * indiv["m7_timesfm3_compact"]
+                + 0.15 * indiv["m8_chronos2_covariate"]
+            )
+            raw_blend = (1.0 - 0.94 * rg) * raw_blend + (0.94 * rg) * p_clean_blend
+            p_anchor = (1.0 - rg) * p_anchor + rg * p_clean_blend
+        else:
+            rg = None
         return self.apply_station_shrinkage(
             raw_blend=raw_blend,
             prior_anchor=p_anchor,
             location_ids=feat_df["location_id"].values,
             horizon_hours=feat_df["horizon_hours"].values if "horizon_hours" in feat_df.columns else None,
+            regime_gate=rg,
         )
 
 
