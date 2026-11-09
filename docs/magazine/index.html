@@ -86,9 +86,10 @@ h1 .deva { font-family: "Tiro Devanagari Hindi", "Kohinoor Devanagari", serif; f
 .eq {
   overflow-x: auto;
   margin: 1.1rem 0 1.3rem;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
-.plate { margin: 1.4rem 0 0.4rem; background: #F7F4EB; }
+.eq .katex-display { margin: 0.15rem 0; }
+.plate { margin: 1.4rem 0 0.4rem; background: #F7F4EB; width: 100%; }
 .plate svg { width: 100%; height: auto; display: block; }
 .caption { font-size: 0.78rem; line-height: 1.45; color: var(--muted); max-width: 46rem; margin: 0.45rem 0 1.2rem; }
 table { width: 100%; border-collapse: collapse; font-size: 0.78rem; line-height: 1.35; margin: 0.4rem 0; }
@@ -203,11 +204,7 @@ footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule);
 <text x="1023" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >tied first · xP5LoEHK · sK5XpFqb</text>
 <line x1="882" y1="352" x2="882" y2="424" stroke="#0A1119" stroke-opacity="0.18"/>
 </svg>
-</figure><p class="caption">Fig. I. Cover metrics are out-of-fold RMSE on raw pm25, except the public leaderboard score of 0.0 on submissions xP5LoEHK and sK5XpFqb.</p></div><div class="row"><div class="main"><p>VayuDrishti forecasts hourly PM2.5 at four Mumbai CPCB stations and draws that same air as a civic twin. The stations are Borivali East (<code>11606</code>), Malad West (<code>11611</code>), Byculla (<code>3409510</code>), and Shivaji Nagar (<code>3409511</code>). The scored file has 2,592 rows, 22 October 2026 through 17 November 2026. The private window is 11–12 November, 192 rows, scored by RMSE.</p></div></div><div class="row"><div class="main"><p>Five October folds, 12–21 October, give the eight-model stack an out-of-fold RMSE of <strong>9.1531 µg/m³</strong> at a 24-hour reporting gap and <strong>9.2545 µg/m³</strong> at 72 hours. A 15-hour post-Diwali window, 27 October–4 November, gives <strong>6.2616 µg/m³</strong>. The 1–2 November slice of that regime gives <strong>6.0855 µg/m³</strong>. On the public leaderboard, <code>xP5LoEHK</code> and <code>sK5XpFqb</code> score <strong>0.0</strong> and sit tied for first.</p></div></div><div class="row"><aside class="sidenote">src/submit.py writes the Train.csv observation onto any test row whose hour has already been released. The public 0.0 is that lookup. The out-of-fold table is the score on hours the models had to forecast.</aside></div><h2>A squared error wants the mean</h2><div class="row"><div class="main"><p>RMSE is squared error. The forecast that minimizes expected squared error is the conditional mean. TimesFM 3.0 returns nine deciles and Chronos-2 returns 21 quantiles. VayuDrishti integrates those quantiles with the trapezoidal rule and submits the integral. On a right-skewed hour the mean sits above the median, which is the point the absolute-error loss would have chosen.</p></div></div><div class="eq">$$
-\hat{y}_{\mathrm{RMSE}}=\mathbb{E}[Y\mid\mathcal{I}_{T_0}]=\int_0^1 F^{-1}(\tau)\,d\tau
-$$</div><div class="row"><div class="main"><p>The TimesFM deciles use weights 0.15 on each tail and 0.10 on each interior decile. Chronos-2 uses the pipeline’s own probability mass per quantile level. Models train on <code>pm25_clean</code>: a <code>flag_high_1000</code> or a value above 450 µg/m³ is removed, then a 7-hour Hampel filter at 4.5 × 1.4826 × MAD. Every validation number in this piece is scored on the unmodified raw <code>pm25</code> column.</p></div></div><div class="eq">$$
-\tilde{\mathbf{w}}_{\mathrm{TimesFM}}=[0.15,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.15]
-$$</div><h2>The chemical model peaks while the city clears</h2><div class="row"><div class="main"><p>Panel A is the mean hour, 1–21 October 2026, four stations, indexed by <code>hour_start</code> in Asia/Kolkata. 1,836 station-hours remain after values above 450 µg/m³ are set aside. CAMS <code>pm2_5</code> peaks at <strong>82.1 µg/m³</strong> at 17:00. The CPCB mean is lowest at <strong>41.9 µg/m³</strong> at 14:00. From 14:00 to 17:00 the CAMS mean is 78.8 µg/m³ and the CPCB mean is 42.7 µg/m³. The correlation of the 24 hourly means is <strong>r = −0.668</strong>.</p></div></div><div class="row"><div class="main"><p>Boundary-layer height in the same means runs from <strong>84 m</strong> at 05:00 to <strong>1,863 m</strong> at 12:00. The surface is dirtiest under the shallow lid and cleaner once the afternoon sea breeze has mixed the column. CAMS, on this coastal hour, does the opposite. The architecture notes record a sharper version of the same mismatch on fold 4, 18–19 October: a CAMS spike of 102 µg/m³ while the CPCB stations stayed between 41 and 62 µg/m³.</p></div></div><div class="row"><aside class="sidenote">On the validation window alone, 12–21 October, the hour-of-day correlation is r = −0.763. CAMS peaks at 98.5 µg/m³ at 14:00. The CPCB mean is lowest at 48.1 µg/m³ at 14:00.</aside></div><div class="row wide"><figure class="plate"><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" role="img" aria-label="CAMS diurnal inversion and October benchmark">
+</figure><p class="caption">Fig. I. Cover metrics are out-of-fold RMSE on raw pm25, except the public leaderboard score of 0.0 on submissions xP5LoEHK and sK5XpFqb.</p></div><div class="row"><div class="main"><p>VayuDrishti forecasts hourly PM2.5 at four Mumbai CPCB stations and draws that same air as a civic twin. The stations are Borivali East (<code>11606</code>), Malad West (<code>11611</code>), Byculla (<code>3409510</code>), and Shivaji Nagar (<code>3409511</code>). The scored file has 2,592 rows, 22 October 2026 through 17 November 2026. The private window is 11–12 November, 192 rows, scored by RMSE.</p></div></div><div class="row"><div class="main"><p>Five October folds, 12–21 October, give the eight-model stack an out-of-fold RMSE of <strong>9.1531 µg/m³</strong> at a 24-hour reporting gap and <strong>9.2545 µg/m³</strong> at 72 hours. A 15-hour post-Diwali window, 27 October–4 November, gives <strong>6.2616 µg/m³</strong>. The 1–2 November slice of that regime gives <strong>6.0855 µg/m³</strong>. On the public leaderboard, <code>xP5LoEHK</code> and <code>sK5XpFqb</code> score <strong>0.0</strong> and sit tied for first.</p></div></div><div class="row"><aside class="sidenote">src/submit.py writes the Train.csv observation onto any test row whose hour has already been released. The public 0.0 is that lookup. The out-of-fold table is the score on hours the models had to forecast.</aside></div><h2>A squared error wants the mean</h2><div class="row"><div class="main"><p>RMSE is squared error. The forecast that minimizes expected squared error is the conditional mean. TimesFM 3.0 returns nine deciles and Chronos-2 returns 21 quantiles. VayuDrishti integrates those quantiles with the trapezoidal rule and submits the integral. On a right-skewed hour the mean sits above the median, which is the point the absolute-error loss would have chosen.</p></div></div><div class="eq"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi>y</mi><mo>^</mo></mover><mrow><mi mathvariant="normal">R</mi><mi mathvariant="normal">M</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">E</mi></mrow></msub><mo>=</mo><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><mi>Y</mi><mo>∣</mo><msub><mi mathvariant="script">I</mi><msub><mi>T</mi><mn>0</mn></msub></msub><mo stretchy="false">]</mo><mo>=</mo><msubsup><mo>∫</mo><mn>0</mn><mn>1</mn></msubsup><msup><mi>F</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo><mtext> </mtext><mi>d</mi><mi>τ</mi></mrow><annotation encoding="application/x-tex">\hat{y}_{\mathrm{RMSE}}=\mathbb{E}[Y\mid\mathcal{I}_{T_0}]=\int_0^1 F^{-1}(\tau)\,d\tau</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.6944em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span></span><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1944em;"><span class="mord">^</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.1944em;"><span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">RMSE</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathbb">E</span><span class="mopen">[</span><span class="mord mathnormal" style="margin-right:0.22222em;">Y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∣</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0001em;vertical-align:-0.2501em;"></span><span class="mord"><span class="mord mathcal" style="margin-right:0.07382em;">I</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0738em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3173em;"><span style="top:-2.357em;margin-left:-0.1389em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2501em;"><span></span></span></span></span></span></span><span class="mclose">]</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.476em;vertical-align:-0.9119em;"></span><span class="mop"><span class="mop op-symbol large-op" style="margin-right:0.44445em;position:relative;top:-0.0011em;">∫</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.564em;"><span style="top:-1.7881em;margin-left:-0.4445em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span><span style="top:-3.8129em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9119em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">F</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">d</span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span></span></span></span></span></div><div class="row"><div class="main"><p>The TimesFM deciles use weights 0.15 on each tail and 0.10 on each interior decile. Chronos-2 uses the pipeline’s own probability mass per quantile level. Models train on <code>pm25_clean</code>: a <code>flag_high_1000</code> or a value above 450 µg/m³ is removed, then a 7-hour Hampel filter at 4.5 × 1.4826 × MAD. Every validation number in this piece is scored on the unmodified raw <code>pm25</code> column.</p></div></div><div class="eq"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><msub><mover accent="true"><mi mathvariant="bold">w</mi><mo>~</mo></mover><mrow><mi mathvariant="normal">T</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">m</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">F</mi><mi mathvariant="normal">M</mi></mrow></msub><mo>=</mo><mo stretchy="false">[</mo><mn>0.15</mn><mo separator="true">,</mo><mtext> </mtext><mn>0.10</mn><mo separator="true">,</mo><mtext> </mtext><mn>0.10</mn><mo separator="true">,</mo><mtext> </mtext><mn>0.10</mn><mo separator="true">,</mo><mtext> </mtext><mn>0.10</mn><mo separator="true">,</mo><mtext> </mtext><mn>0.10</mn><mo separator="true">,</mo><mtext> </mtext><mn>0.10</mn><mo separator="true">,</mo><mtext> </mtext><mn>0.10</mn><mo separator="true">,</mo><mtext> </mtext><mn>0.15</mn><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">\tilde{\mathbf{w}}_{\mathrm{TimesFM}}=[0.15,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.15]</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8313em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.6813em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathbf" style="margin-right:0.01597em;">w</span></span><span style="top:-3.3634em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">~</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.016em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathrm mtight">TimesFM</span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0.15</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.10</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.10</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.10</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.10</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.10</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.10</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.10</span><span class="mpunct">,</span><span class="mspace"> </span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">0.15</span><span class="mclose">]</span></span></span></span></span></div><h2>The chemical model peaks while the city clears</h2><div class="row"><div class="main"><p>Panel A is the mean hour, 1–21 October 2026, four stations, indexed by <code>hour_start</code> in Asia/Kolkata. 1,836 station-hours remain after values above 450 µg/m³ are set aside. CAMS <code>pm2_5</code> peaks at <strong>82.1 µg/m³</strong> at 17:00. The CPCB mean is lowest at <strong>41.9 µg/m³</strong> at 14:00. From 14:00 to 17:00 the CAMS mean is 78.8 µg/m³ and the CPCB mean is 42.7 µg/m³. The correlation of the 24 hourly means is <strong>r = −0.668</strong>.</p></div></div><div class="row"><div class="main"><p>Boundary-layer height in the same means runs from <strong>84 m</strong> at 05:00 to <strong>1,863 m</strong> at 12:00. The surface is dirtiest under the shallow lid and cleaner once the afternoon sea breeze has mixed the column. CAMS, on this coastal hour, does the opposite. The architecture notes record a sharper version of the same mismatch on fold 4, 18–19 October: a CAMS spike of 102 µg/m³ while the CPCB stations stayed between 41 and 62 µg/m³.</p></div></div><div class="row"><aside class="sidenote">On the validation window alone, 12–21 October, the hour-of-day correlation is r = −0.763. CAMS peaks at 98.5 µg/m³ at 14:00. The CPCB mean is lowest at 48.1 µg/m³ at 14:00.</aside></div><div class="row wide"><figure class="plate"><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1324" viewBox="0 0 1200 1324" role="img" aria-label="CAMS diurnal inversion and October benchmark">
 <title>CAMS diurnal inversion and October benchmark</title>
 <rect width="100%" height="100%" fill="#F7F4EB"/>
 
@@ -227,100 +224,143 @@ $$</div><h2>The chemical model peaks while the city clears</h2><div class="row">
   @keyframes vd-breathe { 0%, 100% { transform: translateY(7px); } 50% { transform: translateY(-16px); } }
 </style>
 
-<rect x="10" y="10" width="1180" height="460" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="452" fill="none" stroke="#C84B31" stroke-width="0.6"/>
-<text x="36" y="40" class="p-mono p-terra" font-size="12" text-anchor="start" >FIG. III</text>
-<text x="36" y="68" class="p-serif" font-size="24" text-anchor="start" >The afternoon CAMS peak, and the surface trough</text>
-<text x="620" y="40" class="p-mono p-muted" font-size="11" text-anchor="end" >PANEL A</text>
-<text x="640" y="40" class="p-mono p-muted" font-size="11" text-anchor="start" >PANEL B  ·  OCTOBER OOF RMSE</text>
-<line x1="620" y1="78" x2="620" y2="450" stroke="#0A1119" stroke-opacity="0.15"/>
-<line x1="78" y1="328.6" x2="560" y2="328.6" stroke="#0A1119" stroke-opacity="0.08"/>
-<text x="70" y="332.61538461538464" class="p-mono p-muted" font-size="10" text-anchor="end" >40</text>
-<line x1="78" y1="249.8" x2="560" y2="249.8" stroke="#0A1119" stroke-opacity="0.08"/>
-<text x="70" y="253.84615384615384" class="p-mono p-muted" font-size="10" text-anchor="end" >60</text>
-<line x1="78" y1="171.1" x2="560" y2="171.1" stroke="#0A1119" stroke-opacity="0.08"/>
-<text x="70" y="175.07692307692307" class="p-mono p-muted" font-size="10" text-anchor="end" >80</text>
-<line x1="78.0" y1="112" x2="78.0" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
-<text x="78.0" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >00</text>
-<line x1="203.7" y1="112" x2="203.7" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
-<text x="203.73913043478262" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >06</text>
-<line x1="329.5" y1="112" x2="329.5" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
-<text x="329.47826086956525" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >12</text>
-<line x1="455.2" y1="112" x2="455.2" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
-<text x="455.21739130434787" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >18</text>
-<line x1="560.0" y1="112" x2="560.0" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
-<text x="560.0" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >23</text>
-<path d="M 78.0,368.0 L 78.0,352.5 L 99.0,353.4 L 119.9,354.3 L 140.9,355.0 L 161.8,355.8 L 182.8,357.3 L 203.7,356.8 L 224.7,354.5 L 245.7,345.4 L 266.6,322.0 L 287.6,265.9 L 308.5,160.7 L 329.5,129.5 L 350.4,135.1 L 371.4,163.9 L 392.3,192.8 L 413.3,225.8 L 434.3,282.1 L 455.2,323.7 L 476.2,329.6 L 497.1,333.4 L 518.1,337.5 L 539.0,341.9 L 560.0,349.1 L 560.0,368.0 Z" fill="#2F5D62" fill-opacity="0.16"/>
-<polyline points="78.0,352.5 99.0,353.4 119.9,354.3 140.9,355.0 161.8,355.8 182.8,357.3 203.7,356.8 224.7,354.5 245.7,345.4 266.6,322.0 287.6,265.9 308.5,160.7 329.5,129.5 350.4,135.1 371.4,163.9 392.3,192.8 413.3,225.8 434.3,282.1 455.2,323.7 476.2,329.6 497.1,333.4 518.1,337.5 539.0,341.9 560.0,349.1" fill="none" stroke="#2F5D62" stroke-width="1.3"/>
-<polyline points="78.0,253.8 99.0,257.0 119.9,262.5 140.9,270.0 161.8,277.4 182.8,272.8 203.7,277.3 224.7,275.2 245.7,270.4 266.6,259.7 287.6,243.6 308.5,224.1 329.5,199.6 350.4,179.1 371.4,171.3 392.3,174.0 413.3,194.6 434.3,162.7 455.2,192.3 476.2,216.9 497.1,236.1 518.1,246.5 539.0,250.3 560.0,250.2" fill="none" stroke="#C84B31" stroke-width="2.15"/>
-<polyline points="78.0,282.9 99.0,286.1 119.9,292.4 140.9,296.7 161.8,304.7 182.8,309.1 203.7,306.9 224.7,297.4 245.7,288.4 266.6,287.5 287.6,294.1 308.5,304.0 329.5,314.3 350.4,319.8 371.4,321.3 392.3,318.0 413.3,318.9 434.3,313.5 455.2,304.1 476.2,298.2 497.1,289.7 518.1,283.3 539.0,279.5 560.0,284.4" fill="none" stroke="#0A1119" stroke-width="2.15"/>
-<line x1="40" y1="86" x2="62" y2="86" stroke="#C84B31" stroke-width="2"/>
-<text x="68" y="90" class="p-mono" font-size="11" text-anchor="start" >CAMS</text>
-<line x1="118" y1="86" x2="140" y2="86" stroke="#0A1119" stroke-width="2"/>
-<text x="146" y="90" class="p-mono" font-size="11" text-anchor="start" >CPCB</text>
-<rect x="200" y="80" width="14" height="8" fill="#2F5D62" fill-opacity="0.45"/>
-<text x="220" y="90" class="p-mono" font-size="11" text-anchor="start" >PBLH</text>
-<text x="560" y="90" class="p-serif" font-size="16" text-anchor="end" >r = −0.668</text>
-<text x="36" y="400" class="p-mono p-muted" font-size="10" text-anchor="start" >1–21 October 2026 · hour_start IST · values above 450 µg/m³ removed</text>
-<text x="36" y="416" class="p-mono p-muted" font-size="10" text-anchor="start" >CAMS 82.1 at 17:00   ·   CPCB 41.9 at 14:00   ·   PBLH 84–1,863 m</text>
-<text x="800" y="68" class="p-mono p-muted" font-size="10" text-anchor="middle" >0</text>
-<text x="968" y="68" class="p-mono p-muted" font-size="10" text-anchor="end" >19</text>
-<text x="992" y="68" class="p-mono p-muted" font-size="10" text-anchor="start" >24h / 72h</text>
-<line x1="800" y1="74" x2="800" y2="404" stroke="#0A1119" stroke-opacity="0.3"/>
-<text x="792" y="89" class="p-mono" font-size="11" text-anchor="end" >Starter RF</text>
-<rect x="800" y="78" width="123.5" height="7" fill="#0A1119"/>
-<rect x="800" y="87" width="158.0" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="89" class="p-mono" font-size="10" text-anchor="start" >13.9719 / 17.8742</text>
-<text x="792" y="119" class="p-mono" font-size="11" text-anchor="end" >7-day diurnal</text>
-<rect x="800" y="108" width="126.3" height="7" fill="#0A1119"/>
-<rect x="800" y="117" width="147.2" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="119" class="p-mono" font-size="10" text-anchor="start" >14.2873 / 16.6453</text>
-<text x="792" y="149" class="p-mono" font-size="11" text-anchor="end" >M1 CAMS</text>
-<rect x="800" y="138" width="86.4" height="7" fill="#0A1119"/>
-<rect x="800" y="147" width="89.0" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="149" class="p-mono" font-size="10" text-anchor="start" >9.7752 / 10.0666</text>
-<text x="792" y="179" class="p-mono" font-size="11" text-anchor="end" >M2 GAM</text>
-<rect x="800" y="168" width="82.8" height="7" fill="#0A1119"/>
-<rect x="800" y="177" width="85.9" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="179" class="p-mono" font-size="10" text-anchor="start" >9.3648 / 9.7165</text>
-<text x="792" y="209" class="p-mono" font-size="11" text-anchor="end" >M3 LightGBM</text>
-<rect x="800" y="198" width="92.7" height="7" fill="#0A1119"/>
-<rect x="800" y="207" width="96.2" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="209" class="p-mono" font-size="10" text-anchor="start" >10.484 / 10.8747</text>
-<text x="792" y="239" class="p-mono" font-size="11" text-anchor="end" >M4 CatBoost</text>
-<rect x="800" y="228" width="91.3" height="7" fill="#0A1119"/>
-<rect x="800" y="237" width="95.8" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="239" class="p-mono" font-size="10" text-anchor="start" >10.3284 / 10.8312</text>
-<text x="792" y="269" class="p-mono" font-size="11" text-anchor="end" >M5 XGBoost</text>
-<rect x="800" y="258" width="93.5" height="7" fill="#0A1119"/>
-<rect x="800" y="267" width="101.0" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="269" class="p-mono" font-size="10" text-anchor="start" >10.5744 / 11.418</text>
-<text x="792" y="299" class="p-mono" font-size="11" text-anchor="end" >M6 ST-GAT</text>
-<rect x="800" y="288" width="90.6" height="7" fill="#0A1119"/>
-<rect x="800" y="297" width="86.9" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="299" class="p-mono" font-size="10" text-anchor="start" >10.242 / 9.8261</text>
-<text x="792" y="329" class="p-mono" font-size="11" text-anchor="end" >M7 TimesFM</text>
-<rect x="800" y="318" width="85.2" height="7" fill="#0A1119"/>
-<rect x="800" y="327" width="89.6" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="329" class="p-mono" font-size="10" text-anchor="start" >9.6379 / 10.1333</text>
-<text x="792" y="359" class="p-mono" font-size="11" text-anchor="end" >M8 Chronos</text>
-<rect x="800" y="348" width="82.8" height="7" fill="#0A1119"/>
-<rect x="800" y="357" width="86.0" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="992" y="359" class="p-mono" font-size="10" text-anchor="start" >9.3604 / 9.7299</text>
-<text x="792" y="389" class="p-mono" font-size="11" text-anchor="end" style="fill:#C84B31" >Ensemble</text>
-<rect x="800" y="378" width="80.9" height="7" fill="#C84B31"/>
-<rect x="800" y="387" width="81.8" height="4" fill="#C84B31" fill-opacity="0.35"/>
-<text x="992" y="389" class="p-mono" font-size="10" text-anchor="start" style="fill:#C84B31" >9.1531 / 9.2545</text>
-<rect x="650" y="430" width="14" height="8" fill="#0A1119"/>
-<text x="670" y="438" class="p-mono" font-size="11" text-anchor="start" >24h solid</text>
-<rect x="760" y="432" width="14" height="4" fill="#0A1119" fill-opacity="0.35"/>
-<text x="780" y="438" class="p-mono" font-size="11" text-anchor="start" >72h pale</text>
-<text x="870" y="438" class="p-mono p-muted" font-size="10" text-anchor="start" >90d mean off-scale: 37.9949 / 38.8708</text>
+<rect x="10" y="10" width="1180" height="1304" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="1296" fill="none" stroke="#C84B31" stroke-width="0.6"/>
+<text x="40" y="46" class="p-mono p-terra" font-size="15" text-anchor="start" >FIG. III</text>
+<text x="40" y="90" class="p-serif" font-size="32" text-anchor="start" >The afternoon CAMS peak, and the surface trough</text>
+<text x="40" y="122" class="p-mono p-muted" font-size="14" text-anchor="start" >1–21 October 2026  ·  four stations  ·  hour_start, Asia/Kolkata  ·  values above 450 µg/m³ removed</text>
+<text x="40" y="158" class="p-mono p-terra" font-size="14" text-anchor="start" >PANEL A</text>
+<text x="128" y="158" class="p-mono p-muted" font-size="14" text-anchor="start" >HOUR-OF-DAY MEANS  ·  µg/m³</text>
+<line x1="720" y1="148" x2="756" y2="148" stroke="#C84B31" stroke-width="4" stroke-linecap="round"/>
+<text x="766" y="153" class="p-mono" font-size="15" text-anchor="start" >CAMS</text>
+<line x1="860" y1="148" x2="896" y2="148" stroke="#0A1119" stroke-width="4" stroke-linecap="round"/>
+<text x="906" y="153" class="p-mono" font-size="15" text-anchor="start" >CPCB</text>
+<text x="1160" y="154" class="p-serif" font-size="22" text-anchor="end" >r = −0.668</text>
+<rect x="92" y="178" width="1036" height="370" fill="#FBF8F1" stroke="#0A1119" stroke-opacity="0.28" stroke-width="1"/>
+<rect x="722.6" y="178" width="135.1" height="370" fill="#C84B31" fill-opacity="0.10"/>
+<line x1="92" y1="514.4" x2="1128" y2="514.4" stroke="#0A1119" stroke-opacity="0.10"/>
+<text x="80" y="519.3636363636364" class="p-mono p-muted" font-size="15" text-anchor="end" >40</text>
+<line x1="92" y1="447.1" x2="1128" y2="447.1" stroke="#0A1119" stroke-opacity="0.10"/>
+<text x="80" y="452.0909090909091" class="p-mono p-muted" font-size="15" text-anchor="end" >50</text>
+<line x1="92" y1="379.8" x2="1128" y2="379.8" stroke="#0A1119" stroke-opacity="0.10"/>
+<text x="80" y="384.8181818181818" class="p-mono p-muted" font-size="15" text-anchor="end" >60</text>
+<line x1="92" y1="312.5" x2="1128" y2="312.5" stroke="#0A1119" stroke-opacity="0.10"/>
+<text x="80" y="317.54545454545456" class="p-mono p-muted" font-size="15" text-anchor="end" >70</text>
+<line x1="92" y1="245.3" x2="1128" y2="245.3" stroke="#0A1119" stroke-opacity="0.10"/>
+<text x="80" y="250.27272727272725" class="p-mono p-muted" font-size="15" text-anchor="end" >80</text>
+<line x1="92" y1="178.0" x2="1128" y2="178.0" stroke="#0A1119" stroke-opacity="0.10"/>
+<text x="80" y="183.0" class="p-mono p-muted" font-size="15" text-anchor="end" >90</text>
+<line x1="92.0" y1="178" x2="92.0" y2="548" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="92.0" y="572" class="p-mono p-muted" font-size="15" text-anchor="middle" >00</text>
+<line x1="362.3" y1="178" x2="362.3" y2="548" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="362.2608695652174" y="572" class="p-mono p-muted" font-size="15" text-anchor="middle" >06</text>
+<line x1="632.5" y1="178" x2="632.5" y2="548" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="632.5217391304348" y="572" class="p-mono p-muted" font-size="15" text-anchor="middle" >12</text>
+<line x1="902.8" y1="178" x2="902.8" y2="548" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="902.7826086956522" y="572" class="p-mono p-muted" font-size="15" text-anchor="middle" >18</text>
+<line x1="1128.0" y1="178" x2="1128.0" y2="548" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="1128.0" y="572" class="p-mono p-muted" font-size="15" text-anchor="middle" >23</text>
+<polyline points="92.0,386.6 137.0,392.1 182.1,401.4 227.1,414.2 272.2,426.9 317.2,419.0 362.3,426.7 407.3,423.2 452.3,415.0 497.4,396.7 542.4,369.2 587.5,335.9 632.5,294.0 677.6,259.0 722.6,245.6 767.7,250.2 812.7,285.4 857.7,231.0 902.8,281.4 947.8,323.6 992.9,356.3 1037.9,374.2 1083.0,380.5 1128.0,380.4" fill="none" stroke="#C84B31" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="92.0,436.3 137.0,441.8 182.1,452.6 227.1,459.8 272.2,473.5 317.2,481.0 362.3,477.3 407.3,461.0 452.3,445.6 497.4,444.1 542.4,455.4 587.5,472.4 632.5,489.8 677.6,499.3 722.6,501.8 767.7,496.2 812.7,497.7 857.7,488.5 902.8,472.6 947.8,462.3 992.9,447.9 1037.9,436.9 1083.0,430.5 1128.0,438.8" fill="none" stroke="#0A1119" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="857.7" cy="231.0" r="7" fill="#F7F4EB" stroke="#C84B31" stroke-width="3"/>
+<circle cx="722.6" cy="501.8" r="7" fill="#F7F4EB" stroke="#0A1119" stroke-width="3"/>
+<text x="847.7391304347825" y="216.95324675324667" class="p-serif p-terra" font-size="20" text-anchor="end" >82.1</text>
+<text x="722.608695652174" y="483.84952677459523" class="p-serif" font-size="20" text-anchor="middle" >41.9</text>
+<text x="92" y="596" class="p-mono p-muted" font-size="14" text-anchor="start" >hour_start, IST</text>
+<text x="790.1739130434783" y="596" class="p-mono p-terra" font-size="14" text-anchor="middle" >14:00–17:00</text>
+<text x="181.0" y="676" class="p-serif" font-size="32" text-anchor="middle" >82.1</text>
+<text x="181.0" y="698" class="p-mono" font-size="13" text-anchor="middle" >CAMS peak</text>
+<text x="181.0" y="716" class="p-mono p-muted" font-size="13" text-anchor="middle" >17:00</text>
+<line x1="322" y1="640" x2="322" y2="718" stroke="#0A1119" stroke-opacity="0.15"/>
+<text x="463.0" y="676" class="p-serif" font-size="32" text-anchor="middle" >41.9</text>
+<text x="463.0" y="698" class="p-mono" font-size="13" text-anchor="middle" >CPCB lowest</text>
+<text x="463.0" y="716" class="p-mono p-muted" font-size="13" text-anchor="middle" >14:00</text>
+<line x1="604" y1="640" x2="604" y2="718" stroke="#0A1119" stroke-opacity="0.15"/>
+<text x="745.0" y="676" class="p-serif" font-size="32" text-anchor="middle" >78.8  /  42.7</text>
+<text x="745.0" y="698" class="p-mono" font-size="13" text-anchor="middle" >14:00–17:00 means</text>
+<text x="745.0" y="716" class="p-mono p-muted" font-size="13" text-anchor="middle" >CAMS  ·  CPCB</text>
+<line x1="886" y1="640" x2="886" y2="718" stroke="#0A1119" stroke-opacity="0.15"/>
+<text x="1027.0" y="676" class="p-serif" font-size="32" text-anchor="middle" >−0.668</text>
+<text x="1027.0" y="698" class="p-mono" font-size="13" text-anchor="middle" >correlation r</text>
+<text x="1027.0" y="716" class="p-mono p-muted" font-size="13" text-anchor="middle" >24 hourly means</text>
+<text x="40" y="744" class="p-mono p-muted" font-size="14" text-anchor="start" >Boundary-layer height in these means: 84 m at 05:00 to 1,863 m at 12:00</text>
+<line x1="40" y1="768" x2="1160" y2="768" stroke="#0A1119" stroke-opacity="0.2"/>
+<text x="40" y="808" class="p-mono p-terra" font-size="14" text-anchor="start" >PANEL B</text>
+<text x="128" y="808" class="p-mono p-muted" font-size="14" text-anchor="start" >OCTOBER OUT-OF-FOLD RMSE</text>
+<text x="300" y="842" class="p-mono p-muted" font-size="14" text-anchor="middle" >0</text>
+<text x="425.0" y="842" class="p-mono p-muted" font-size="14" text-anchor="middle" >5</text>
+<text x="550.0" y="842" class="p-mono p-muted" font-size="14" text-anchor="middle" >10</text>
+<text x="675.0" y="842" class="p-mono p-muted" font-size="14" text-anchor="middle" >15</text>
+<text x="800.0" y="842" class="p-mono p-muted" font-size="14" text-anchor="middle" >20</text>
+<text x="860" y="842" class="p-mono p-muted" font-size="14" text-anchor="start" >24h</text>
+<text x="980" y="842" class="p-mono p-muted" font-size="14" text-anchor="start" >72h</text>
+<line x1="300" y1="856" x2="300" y2="1252" stroke="#0A1119" stroke-opacity="0.35"/>
+<line x1="425.0" y1="856" x2="425.0" y2="1252" stroke="#0A1119" stroke-opacity="0.08"/>
+<line x1="550.0" y1="856" x2="550.0" y2="1252" stroke="#0A1119" stroke-opacity="0.08"/>
+<line x1="675.0" y1="856" x2="675.0" y2="1252" stroke="#0A1119" stroke-opacity="0.08"/>
+<line x1="800.0" y1="856" x2="800.0" y2="1252" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="284" y="902" class="p-mono" font-size="15" text-anchor="end" >Starter random forest</text>
+<rect x="300" y="888" width="349.3" height="14" fill="#0A1119"/>
+<rect x="300" y="904" width="446.9" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="904" class="p-mono" font-size="15" text-anchor="start" >13.9719</text>
+<text x="980" y="904" class="p-mono" font-size="15" text-anchor="start" >17.8742</text>
+<text x="284" y="936" class="p-mono" font-size="15" text-anchor="end" >7-day diurnal</text>
+<rect x="300" y="922" width="357.2" height="14" fill="#0A1119"/>
+<rect x="300" y="938" width="416.1" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="938" class="p-mono" font-size="15" text-anchor="start" >14.2873</text>
+<text x="980" y="938" class="p-mono" font-size="15" text-anchor="start" >16.6453</text>
+<text x="284" y="970" class="p-mono" font-size="15" text-anchor="end" >M1 CAMS prior</text>
+<rect x="300" y="956" width="244.4" height="14" fill="#0A1119"/>
+<rect x="300" y="972" width="251.7" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="972" class="p-mono" font-size="15" text-anchor="start" >9.7752</text>
+<text x="980" y="972" class="p-mono" font-size="15" text-anchor="start" >10.0666</text>
+<text x="284" y="1004" class="p-mono" font-size="15" text-anchor="end" >M2 GAM</text>
+<rect x="300" y="990" width="234.1" height="14" fill="#0A1119"/>
+<rect x="300" y="1006" width="242.9" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="1006" class="p-mono" font-size="15" text-anchor="start" >9.3648</text>
+<text x="980" y="1006" class="p-mono" font-size="15" text-anchor="start" >9.7165</text>
+<text x="284" y="1038" class="p-mono" font-size="15" text-anchor="end" >M3 LightGBM</text>
+<rect x="300" y="1024" width="262.1" height="14" fill="#0A1119"/>
+<rect x="300" y="1040" width="271.9" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="1040" class="p-mono" font-size="15" text-anchor="start" >10.484</text>
+<text x="980" y="1040" class="p-mono" font-size="15" text-anchor="start" >10.8747</text>
+<text x="284" y="1072" class="p-mono" font-size="15" text-anchor="end" >M4 CatBoost</text>
+<rect x="300" y="1058" width="258.2" height="14" fill="#0A1119"/>
+<rect x="300" y="1074" width="270.8" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="1074" class="p-mono" font-size="15" text-anchor="start" >10.3284</text>
+<text x="980" y="1074" class="p-mono" font-size="15" text-anchor="start" >10.8312</text>
+<text x="284" y="1106" class="p-mono" font-size="15" text-anchor="end" >M5 XGBoost</text>
+<rect x="300" y="1092" width="264.4" height="14" fill="#0A1119"/>
+<rect x="300" y="1108" width="285.4" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="1108" class="p-mono" font-size="15" text-anchor="start" >10.5744</text>
+<text x="980" y="1108" class="p-mono" font-size="15" text-anchor="start" >11.418</text>
+<text x="284" y="1140" class="p-mono" font-size="15" text-anchor="end" >M6 ST-GAT</text>
+<rect x="300" y="1126" width="256.1" height="14" fill="#0A1119"/>
+<rect x="300" y="1142" width="245.7" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="1142" class="p-mono" font-size="15" text-anchor="start" >10.242</text>
+<text x="980" y="1142" class="p-mono" font-size="15" text-anchor="start" >9.8261</text>
+<text x="284" y="1174" class="p-mono" font-size="15" text-anchor="end" >M7 TimesFM</text>
+<rect x="300" y="1160" width="240.9" height="14" fill="#0A1119"/>
+<rect x="300" y="1176" width="253.3" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="1176" class="p-mono" font-size="15" text-anchor="start" >9.6379</text>
+<text x="980" y="1176" class="p-mono" font-size="15" text-anchor="start" >10.1333</text>
+<text x="284" y="1208" class="p-mono" font-size="15" text-anchor="end" >M8 Chronos-2</text>
+<rect x="300" y="1194" width="234.0" height="14" fill="#0A1119"/>
+<rect x="300" y="1210" width="243.2" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="860" y="1210" class="p-mono" font-size="15" text-anchor="start" >9.3604</text>
+<text x="980" y="1210" class="p-mono" font-size="15" text-anchor="start" >9.7299</text>
+<rect x="36" y="1222" width="1128" height="30" fill="#C84B31" fill-opacity="0.08"/>
+<text x="284" y="1242" class="p-mono" font-size="18" text-anchor="end" style="fill:#C84B31" >Ensemble</text>
+<rect x="300" y="1228" width="228.8" height="14" fill="#C84B31"/>
+<rect x="300" y="1244" width="231.4" height="8" fill="#C84B31" fill-opacity="0.35"/>
+<text x="860" y="1244" class="p-mono" font-size="18" text-anchor="start" style="fill:#C84B31" >9.1531</text>
+<text x="980" y="1244" class="p-mono" font-size="18" text-anchor="start" style="fill:#C84B31" >9.2545</text>
+<rect x="40" y="1276" width="22" height="14" fill="#0A1119"/>
+<text x="70" y="1288" class="p-mono" font-size="14" text-anchor="start" >24h gap, solid</text>
+<rect x="250" y="1280" width="22" height="8" fill="#0A1119" fill-opacity="0.35"/>
+<text x="280" y="1288" class="p-mono" font-size="14" text-anchor="start" >72h gap, pale</text>
+<text x="470" y="1288" class="p-mono p-muted" font-size="14" text-anchor="start" >90-day mean off this axis: 37.9949 / 38.8708</text>
 </svg>
-</figure><p class="caption">Fig. III. Left: hour-of-day means. Right: October out-of-fold RMSE. Solid bars are the 24-hour gap. Pale bars are the 72-hour gap. The 90-day mean (37.9949 / 38.8708) is left off the axis.</p></div><div class="row"><div class="main"><p>Model 1 keeps the CAMS information and refuses the false alarm. A log-ratio against the trailing CAMS baseline passes through a tanh gate with κ = 0.45, so a large chemical spike cannot multiply the diurnal prior by more than about e^0.45. Ventilation, PBLH times 10 m wind, pulls the same forecast back down when the column is actually mixing.</p></div></div><div class="eq">$$
-\rho(s,t)=\exp\!\left(\kappa\tanh\!\left(\frac{1}{\kappa}\ln\frac{C(s,t)}{\max(\bar C_{T_0}(s,h),10)}\right)\right),\quad \kappa=0.45
-$$</div><h2>Eight forecasts, one closed hour</h2><div class="row"><div class="main"><p>Every historical target, and every VABB observation, has to satisfy <code>hour_end ≤ T0</code>. In Train.csv, <code>timestamp_ist</code> is the end of the hour, so the hour starts one hour earlier. Test.csv already names <code>target_start_ist</code> and <code>target_end_ist</code>. Open-Meteo and VABB are indexed on the start. VABB contributes temperature, dewpoint, relative humidity, wind direction, wind speed, and altimeter setting.</p></div></div><div class="eq">$$
-\mathrm{hour\_end}\le T_0
-$$</div><div class="row"><div class="main"><p>The eight forecasts are different instruments. M1 is the diurnal prior with the tanh CAMS gate. M2 is a Huber/Ridge spline GAM on the M1 residual, with Duan’s smearing on the log-ratio branch so the exponential back-transform keeps its mean. M3, M4, and M5 are LightGBM, CatBoost, and XGBoost residuals. M6 is a PyTorch graph whose attention prefers the downwind neighbor. M7 is TimesFM 3.0 in two compact views, four target series and those four plus CAMS and log ventilation, with <code>use_znorm</code> off and edge padding. M8 is Chronos-2 with future covariates and a meteorological analog ensemble.</p></div></div><div class="row wide"><figure class="plate"><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="Eight-model causal forecasting stack">
+</figure><p class="caption">Fig. III. Upper panel: hour-of-day means. Lower panel: October out-of-fold RMSE. Solid bars are the 24-hour gap. Pale bars are the 72-hour gap. The 90-day mean (37.9949 / 38.8708) is left off the axis.</p></div><div class="row"><div class="main"><p>Model 1 keeps the CAMS information and refuses the false alarm. A log-ratio against the trailing CAMS baseline passes through a tanh gate with κ = 0.45, so a large chemical spike cannot multiply the diurnal prior by more than about e^0.45. Ventilation, PBLH times 10 m wind, pulls the same forecast back down when the column is actually mixing.</p></div></div><div class="eq"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>ρ</mi><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>=</mo><mi>exp</mi><mo>⁡</mo><mtext> ⁣</mtext><mrow><mo fence="true">(</mo><mi>κ</mi><mi>tanh</mi><mo>⁡</mo><mtext> ⁣</mtext><mrow><mo fence="true">(</mo><mfrac><mn>1</mn><mi>κ</mi></mfrac><mi>ln</mi><mo>⁡</mo><mfrac><mrow><mi>C</mi><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo></mrow><mrow><mi>max</mi><mo>⁡</mo><mo stretchy="false">(</mo><msub><mover accent="true"><mi>C</mi><mo>ˉ</mo></mover><msub><mi>T</mi><mn>0</mn></msub></msub><mo stretchy="false">(</mo><mi>s</mi><mo separator="true">,</mo><mi>h</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mn>10</mn><mo stretchy="false">)</mo></mrow></mfrac><mo fence="true">)</mo></mrow><mo fence="true">)</mo></mrow><mo separator="true">,</mo><mspace width="1em"/><mi>κ</mi><mo>=</mo><mn>0.45</mn></mrow><annotation encoding="application/x-tex">\rho(s,t)=\exp\!\left(\kappa\tanh\!\left(\frac{1}{\kappa}\ln\frac{C(s,t)}{\max(\bar C_{T_0}(s,h),10)}\right)\right),\quad \kappa=0.45</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">ρ</span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.4102em;vertical-align:-0.9602em;"></span><span class="mop">exp</span><span class="mspace" style="margin-right:-0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord mathnormal">κ</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">tanh</span><span class="mspace" style="margin-right:-0.1667em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3214em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">κ</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord">1</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mop">ln</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.427em;"><span style="top:-2.2899em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mop">max</span><span class="mopen">(</span><span class="mord"><span class="mord accent"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8201em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span></span><span style="top:-3.2523em;"><span class="pstrut" style="height:3em;"></span><span class="accent-body" style="left:-0.1667em;"><span class="mord">ˉ</span></span></span></span></span></span></span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.0715em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3173em;"><span style="top:-2.357em;margin-left:-0.1389em;margin-right:0.0714em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2501em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">10</span><span class="mclose">)</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mopen">(</span><span class="mord mathnormal">s</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.9602em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">κ</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">0.45</span></span></span></span></span></div><h2>Eight forecasts, one closed hour</h2><div class="row"><div class="main"><p>Every historical target, and every VABB observation, has to satisfy <code>hour_end ≤ T0</code>. In Train.csv, <code>timestamp_ist</code> is the end of the hour, so the hour starts one hour earlier. Test.csv already names <code>target_start_ist</code> and <code>target_end_ist</code>. Open-Meteo and VABB are indexed on the start. VABB contributes temperature, dewpoint, relative humidity, wind direction, wind speed, and altimeter setting.</p></div></div><div class="eq"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mrow><mi mathvariant="normal">h</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">_</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">d</mi></mrow><mo>≤</mo><msub><mi>T</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">\mathrm{hour\_end}\le T_0</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.0044em;vertical-align:-0.31em;"></span><span class="mord"><span class="mord mathrm">hour_end</span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≤</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3011em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">0</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span></div><div class="row"><div class="main"><p>The eight forecasts are different instruments. M1 is the diurnal prior with the tanh CAMS gate. M2 is a Huber/Ridge spline GAM on the M1 residual, with Duan’s smearing on the log-ratio branch so the exponential back-transform keeps its mean. M3, M4, and M5 are LightGBM, CatBoost, and XGBoost residuals. M6 is a PyTorch graph whose attention prefers the downwind neighbor. M7 is TimesFM 3.0 in two compact views, four target series and those four plus CAMS and log ventilation, with <code>use_znorm</code> off and edge padding. M8 is Chronos-2 with future covariates and a meteorological analog ensemble.</p></div></div><div class="row wide"><figure class="plate"><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="Eight-model causal forecasting stack">
 <title>Eight-model causal forecasting stack</title>
 <rect width="100%" height="100%" fill="#F7F4EB"/>
 
@@ -517,17 +557,21 @@ uv run python src/validation.py &amp;&amp; uv run python src/ensemble.py &amp;&a
     <p>VayuDrishti research monograph · November 2026 · <a href="https://gistpreview.github.io/?d5646cd8720da01fe1fb749fc86190ba">Magazine preview</a> · <a href="https://github.com/guglxni/VayuDrishti">Repository</a></p>
   </footer>
 </div>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  if (window.renderMathInElement) {
-    renderMathInElement(document.body, {
-      delimiters: [{left: "$$", right: "$$", display: true}],
-      throwOnError: false
-    });
-  }
-});
+(function () {
+  if (!window.renderMathInElement) return;
+  var root = document.querySelector(".sheet") || document.body;
+  renderMathInElement(root, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false}
+    ],
+    throwOnError: false,
+    ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "svg"]
+  });
+})();
 </script>
 </body>
 </html>

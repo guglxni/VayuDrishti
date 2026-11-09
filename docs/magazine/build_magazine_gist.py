@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import csv
 import json
+import os
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -426,89 +428,176 @@ def plate_architecture(boards, w24, w72) -> str:
 
 
 def plate_diurnal(raw: dict, facts: dict, boards) -> str:
-    x0, x1, y_top, y_bot = 78, 560, 112, 368
-    pm_min, pm_max = 30, 95
-    pbl_max = 2000
+    """Two full-width panels. Panel A is the printed diurnal means. Panel B is October OOF RMSE.
+
+    Axis max is 20 so the 90-day mean stays off the scale, as the caption says.
+    Bar lengths and callouts use the leaderboard and the hour-of-day means already on the page.
+    """
+    x0, x1, y_top, y_bot = 92, 1128, 178, 548
+    pm_min, pm_max = 35, 90
     obs_pts = series_points(raw["obs"], pm_min, pm_max, x0, x1, y_top, y_bot)
     cams_pts = series_points(raw["cams"], pm_min, pm_max, x0, x1, y_top, y_bot)
-    pbl_pts = series_points(raw["pblh"], 0, pbl_max, x0, x1, y_top, y_bot)
+    cams_hour = max(range(24), key=lambda hour: raw["cams"][hour])
+    obs_hour = min(range(24), key=lambda hour: raw["obs"][hour])
+
+    def hx(hour: int) -> float:
+        return x0 + (x1 - x0) * (hour / 23)
+
     bits = [
-        text(36, 40, "FIG. III", "p-mono p-terra", 12),
-        text(36, 68, "The afternoon CAMS peak, and the surface trough", "p-serif", 24),
-        text(620, 40, "PANEL A", "p-mono p-muted", 11, "end"),
-        text(640, 40, "PANEL B  ·  OCTOBER OOF RMSE", "p-mono p-muted", 11),
-        f'<line x1="620" y1="78" x2="620" y2="450" stroke="{INK}" stroke-opacity="0.15"/>',
+        text(40, 46, "FIG. III", "p-mono p-terra", 15),
+        text(40, 90, "The afternoon CAMS peak, and the surface trough", "p-serif", 32),
+        text(
+            40,
+            122,
+            "1–21 October 2026  ·  four stations  ·  hour_start, Asia/Kolkata  ·  values above 450 µg/m³ removed",
+            "p-mono p-muted",
+            14,
+        ),
+        text(40, 158, "PANEL A", "p-mono p-terra", 14),
+        text(128, 158, "HOUR-OF-DAY MEANS  ·  µg/m³", "p-mono p-muted", 14),
+        f'<line x1="720" y1="148" x2="756" y2="148" stroke="{TERRA}" stroke-width="4" stroke-linecap="round"/>',
+        text(766, 153, "CAMS", "p-mono", 15),
+        f'<line x1="860" y1="148" x2="896" y2="148" stroke="{INK}" stroke-width="4" stroke-linecap="round"/>',
+        text(906, 153, "CPCB", "p-mono", 15),
+        text(1160, 154, f"r = {facts['r']}", "p-serif", 22, "end"),
+        f'<rect x="{x0}" y="{y_top}" width="{x1 - x0}" height="{y_bot - y_top}" fill="{CARD}" stroke="{INK}" stroke-opacity="0.28" stroke-width="1"/>',
     ]
-    for tick in (40, 60, 80):
+    shade_x = hx(14)
+    shade_w = hx(17) - shade_x
+    bits.append(
+        f'<rect x="{shade_x:.1f}" y="{y_top}" width="{shade_w:.1f}" height="{y_bot - y_top}" fill="{TERRA}" fill-opacity="0.10"/>'
+    )
+    for tick in (40, 50, 60, 70, 80, 90):
         y = map_y(tick, pm_min, pm_max, y_top, y_bot)
-        bits.append(f'<line x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}" stroke="{INK}" stroke-opacity="0.08"/>')
-        bits.append(text(x0 - 8, y + 4, str(tick), "p-mono p-muted", 10, "end"))
+        bits.append(
+            f'<line x1="{x0}" y1="{y:.1f}" x2="{x1}" y2="{y:.1f}" stroke="{INK}" stroke-opacity="0.10"/>'
+        )
+        bits.append(text(x0 - 12, y + 5, str(tick), "p-mono p-muted", 15, "end"))
     for hour in (0, 6, 12, 18, 23):
-        x = x0 + (x1 - x0) * (hour / 23)
-        bits.append(f'<line x1="{x:.1f}" y1="{y_top}" x2="{x:.1f}" y2="{y_bot}" stroke="{INK}" stroke-opacity="0.08"/>')
-        bits.append(text(x, y_bot + 16, f"{hour:02d}", "p-mono p-muted", 10, "middle"))
-    bits.append(f'<path d="{area_path(pbl_pts, y_bot)}" fill="{SEA}" fill-opacity="0.16"/>')
+        x = hx(hour)
+        bits.append(
+            f'<line x1="{x:.1f}" y1="{y_top}" x2="{x:.1f}" y2="{y_bot}" stroke="{INK}" stroke-opacity="0.08"/>'
+        )
+        bits.append(text(x, y_bot + 24, f"{hour:02d}", "p-mono p-muted", 15, "middle"))
     bits.append(
-        f'<polyline points="{point_string(pbl_pts)}" fill="none" stroke="{SEA}" stroke-width="1.3"/>'
+        f'<polyline points="{point_string(cams_pts)}" fill="none" stroke="{TERRA}" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>'
     )
     bits.append(
-        f'<polyline points="{point_string(cams_pts)}" fill="none" stroke="{TERRA}" stroke-width="2.15"/>'
+        f'<polyline points="{point_string(obs_pts)}" fill="none" stroke="{INK}" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round"/>'
+    )
+    peak_x, peak_y = cams_pts[cams_hour]
+    trough_x, trough_y = obs_pts[obs_hour]
+    bits.append(
+        f'<circle cx="{peak_x:.1f}" cy="{peak_y:.1f}" r="7" fill="{PAPER}" stroke="{TERRA}" stroke-width="3"/>'
     )
     bits.append(
-        f'<polyline points="{point_string(obs_pts)}" fill="none" stroke="{INK}" stroke-width="2.15"/>'
+        f'<circle cx="{trough_x:.1f}" cy="{trough_y:.1f}" r="7" fill="{PAPER}" stroke="{INK}" stroke-width="3"/>'
     )
-    bits.append(f'<line x1="40" y1="86" x2="62" y2="86" stroke="{TERRA}" stroke-width="2"/>')
-    bits.append(text(68, 90, "CAMS", "p-mono", 11))
-    bits.append(f'<line x1="118" y1="86" x2="140" y2="86" stroke="{INK}" stroke-width="2"/>')
-    bits.append(text(146, 90, "CPCB", "p-mono", 11))
-    bits.append(f'<rect x="200" y="80" width="14" height="8" fill="{SEA}" fill-opacity="0.45"/>')
-    bits.append(text(220, 90, "PBLH", "p-mono", 11))
-    bits.append(text(560, 90, f"r = {facts['r']}", "p-serif", 16, "end"))
-    bits.append(text(36, 400, "1–21 October 2026 · hour_start IST · values above 450 µg/m³ removed", "p-mono p-muted", 10))
-    bits.append(text(36, 416, f"CAMS {facts['cams_peak']} at {facts['cams_h']}   ·   CPCB {facts['obs_trough']} at {facts['obs_h']}   ·   PBLH {facts['pbl_lo']}–{facts['pbl_hi']} m", "p-mono p-muted", 10))
+    bits.append(text(peak_x - 10, peak_y - 14, facts["cams_peak"], "p-serif p-terra", 20, "end"))
+    bits.append(text(trough_x, trough_y - 18, facts["obs_trough"], "p-serif", 20, "middle"))
+    bits.append(text(x0, y_bot + 48, "hour_start, IST", "p-mono p-muted", 14))
+    bits.append(
+        text(shade_x + shade_w / 2, y_bot + 48, "14:00–17:00", "p-mono p-terra", 14, "middle")
+    )
+
+    stats = [
+        (facts["cams_peak"], "CAMS peak", facts["cams_h"]),
+        (facts["obs_trough"], "CPCB lowest", facts["obs_h"]),
+        (f"{facts['cams_aft']}  /  {facts['obs_aft']}", "14:00–17:00 means", "CAMS  ·  CPCB"),
+        (facts["r"], "correlation r", "24 hourly means"),
+    ]
+    stat_top = 640
+    cell_w = 282
+    for i, (number, label, sub) in enumerate(stats):
+        x = 40 + i * cell_w
+        if i:
+            bits.append(
+                f'<line x1="{x}" y1="{stat_top}" x2="{x}" y2="{stat_top + 78}" stroke="{INK}" stroke-opacity="0.15"/>'
+            )
+        bits.append(text(x + cell_w / 2, stat_top + 36, number, "p-serif", 32, "middle"))
+        bits.append(text(x + cell_w / 2, stat_top + 58, label, "p-mono", 13, "middle"))
+        bits.append(text(x + cell_w / 2, stat_top + 76, sub, "p-mono p-muted", 13, "middle"))
+    bits.append(
+        text(
+            40,
+            744,
+            f"Boundary-layer height in these means: {facts['pbl_lo']} m at {facts['pbl_lo_h']} to {facts['pbl_hi']} m at {facts['pbl_hi_h']}",
+            "p-mono p-muted",
+            14,
+        )
+    )
+    bits.append(f'<line x1="40" y1="768" x2="1160" y2="768" stroke="{INK}" stroke-opacity="0.2"/>')
+    bits.append(text(40, 808, "PANEL B", "p-mono p-terra", 14))
+    bits.append(text(128, 808, "OCTOBER OUT-OF-FOLD RMSE", "p-mono p-muted", 14))
 
     labels = {
-        "b1_starter_rf_90d": "Starter RF",
+        "b1_starter_rf_90d": "Starter random forest",
         "b2_diurnal_shrinkage_7d": "7-day diurnal",
-        "m1_calibrated_cams_prior": "M1 CAMS",
+        "m1_calibrated_cams_prior": "M1 CAMS prior",
         "m2_huber_ridge_gam": "M2 GAM",
         "m3_lightgbm_residual": "M3 LightGBM",
         "m4_catboost_residual": "M4 CatBoost",
         "m5_xgboost_residual": "M5 XGBoost",
         "m6_wind_st_gat": "M6 ST-GAT",
         "m7_timesfm3_compact": "M7 TimesFM",
-        "m8_chronos2_covariate": "M8 Chronos",
+        "m8_chronos2_covariate": "M8 Chronos-2",
         "m7_stacked_ensemble": "Ensemble",
     }
-    scale = 19.0
-    bar_w = 168
-    origin = 800
-    top = 78
-    row_h = 30
-    bits.append(text(origin, 68, "0", "p-mono p-muted", 10, "middle"))
-    bits.append(text(origin + bar_w, 68, "19", "p-mono p-muted", 10, "end"))
-    bits.append(text(992, 68, "24h / 72h", "p-mono p-muted", 10))
-    bits.append(f'<line x1="{origin}" y1="74" x2="{origin}" y2="{top + len(BAR_KEYS) * row_h - 4}" stroke="{INK}" stroke-opacity="0.3"/>')
+    scale_max = 20.0
+    origin = 300
+    track = 500
+    top = 888
+    row_h = 34
+    bits.append(text(origin, 842, "0", "p-mono p-muted", 14, "middle"))
+    for tick in (5, 10, 15, 20):
+        x = origin + track * tick / scale_max
+        bits.append(text(x, 842, str(tick), "p-mono p-muted", 14, "middle"))
+    bits.append(text(860, 842, "24h", "p-mono p-muted", 14))
+    bits.append(text(980, 842, "72h", "p-mono p-muted", 14))
+    axis_bottom = top + len(BAR_KEYS) * row_h - 10
+    bits.append(f'<line x1="{origin}" y1="856" x2="{origin}" y2="{axis_bottom}" stroke="{INK}" stroke-opacity="0.35"/>')
+    for tick in (5, 10, 15, 20):
+        x = origin + track * tick / scale_max
+        bits.append(
+            f'<line x1="{x:.1f}" y1="856" x2="{x:.1f}" y2="{axis_bottom}" stroke="{INK}" stroke-opacity="0.08"/>'
+        )
     for i, key in enumerate(BAR_KEYS):
         y = top + i * row_h
         v24 = float(boards["24"][key]["OOF_RMSE"])
         v72 = float(boards["72"][key]["OOF_RMSE"])
         ens = key == "m7_stacked_ensemble"
         color = TERRA if ens else INK
-        w24 = bar_w * v24 / scale
-        w72 = bar_w * v72 / scale
-        bits.append(text(origin - 8, y + 11, labels[key], "p-mono", 11, "end", TERRA if ens else None))
-        bits.append(f'<rect x="{origin}" y="{y}" width="{w24:.1f}" height="7" fill="{color}"/>')
+        size = 18 if ens else 15
+        if ens:
+            bits.append(
+                f'<rect x="36" y="{y - 6}" width="1128" height="30" fill="{TERRA}" fill-opacity="0.08"/>'
+            )
+        bits.append(text(origin - 16, y + 14, labels[key], "p-mono", size, "end", TERRA if ens else None))
         bits.append(
-            f'<rect x="{origin}" y="{y + 9}" width="{w72:.1f}" height="4" fill="{color}" fill-opacity="0.35"/>'
+            f'<rect x="{origin}" y="{y}" width="{track * v24 / scale_max:.1f}" height="14" fill="{color}"/>'
         )
-        bits.append(text(992, y + 11, f"{trim(v24)} / {trim(v72)}", "p-mono", 10, fill=TERRA if ens else None))
-    bits.append(f'<rect x="650" y="430" width="14" height="8" fill="{INK}"/>')
-    bits.append(text(670, 438, "24h solid", "p-mono", 11))
-    bits.append(f'<rect x="760" y="432" width="14" height="4" fill="{INK}" fill-opacity="0.35"/>')
-    bits.append(text(780, 438, "72h pale", "p-mono", 11))
-    bits.append(text(870, 438, "90d mean off-scale: 37.9949 / 38.8708", "p-mono p-muted", 10))
-    return svg_doc(1200, 480, "\n".join(bits), "CAMS diurnal inversion and October benchmark")
+        bits.append(
+            f'<rect x="{origin}" y="{y + 16}" width="{track * v72 / scale_max:.1f}" height="8" fill="{color}" fill-opacity="0.35"/>'
+        )
+        bits.append(text(860, y + 16, trim(v24), "p-mono", size, fill=TERRA if ens else None))
+        bits.append(text(980, y + 16, trim(v72), "p-mono", size, fill=TERRA if ens else None))
+    legend_y = axis_bottom + 36
+    bits.append(f'<rect x="40" y="{legend_y - 12}" width="22" height="14" fill="{INK}"/>')
+    bits.append(text(70, legend_y, "24h gap, solid", "p-mono", 14))
+    bits.append(f'<rect x="250" y="{legend_y - 8}" width="22" height="8" fill="{INK}" fill-opacity="0.35"/>')
+    bits.append(text(280, legend_y, "72h gap, pale", "p-mono", 14))
+    off24 = trim(float(boards["24"]["b0_station_mean_90d"]["OOF_RMSE"]))
+    off72 = trim(float(boards["72"]["b0_station_mean_90d"]["OOF_RMSE"]))
+    bits.append(
+        text(
+            470,
+            legend_y,
+            f"90-day mean off this axis: {off24} / {off72}",
+            "p-mono p-muted",
+            14,
+        )
+    )
+    return svg_doc(1200, legend_y + 36, "\n".join(bits), "CAMS diurnal inversion and October benchmark")
 
 
 def plate_coast(facts: dict) -> str:
@@ -702,7 +791,7 @@ def blocks(facts, rows, wrows, w24, w72, gist_id: str):
         {"type": "p", "text": f"Panel A is the mean hour, 1–21 October 2026, four stations, indexed by `hour_start` in Asia/Kolkata. {facts['n']} station-hours remain after values above 450 µg/m³ are set aside. CAMS `pm2_5` peaks at **{facts['cams_peak']} µg/m³** at {facts['cams_h']}. The CPCB mean is lowest at **{facts['obs_trough']} µg/m³** at {facts['obs_h']}. From 14:00 to 17:00 the CAMS mean is {facts['cams_aft']} µg/m³ and the CPCB mean is {facts['obs_aft']} µg/m³. The correlation of the 24 hourly means is **r = {facts['r']}**."},
         {"type": "p", "text": f"Boundary-layer height in the same means runs from **{facts['pbl_lo']} m** at {facts['pbl_lo_h']} to **{facts['pbl_hi']} m** at {facts['pbl_hi_h']}. The surface is dirtiest under the shallow lid and cleaner once the afternoon sea breeze has mixed the column. CAMS, on this coastal hour, does the opposite. The architecture notes record a sharper version of the same mismatch on fold 4, 18–19 October: a CAMS spike of 102 µg/m³ while the CPCB stations stayed between 41 and 62 µg/m³."},
         {"type": "note", "text": f"On the validation window alone, 12–21 October, the hour-of-day correlation is r = {facts['r_val']}. CAMS peaks at {facts['val_cams_peak']} µg/m³ at {facts['val_cams_h']}. The CPCB mean is lowest at {facts['val_obs_trough']} µg/m³ at {facts['val_obs_h']}."},
-        {"type": "fig", "id": "plate3", "alt": "CAMS diurnal curve and October benchmark bars", "caption": "Fig. III. Left: hour-of-day means. Right: October out-of-fold RMSE. Solid bars are the 24-hour gap. Pale bars are the 72-hour gap. The 90-day mean (37.9949 / 38.8708) is left off the axis."},
+        {"type": "fig", "id": "plate3", "alt": "CAMS diurnal curve and October benchmark bars", "caption": "Fig. III. Upper panel: hour-of-day means. Lower panel: October out-of-fold RMSE. Solid bars are the 24-hour gap. Pale bars are the 72-hour gap. The 90-day mean (37.9949 / 38.8708) is left off the axis."},
         {"type": "p", "text": "Model 1 keeps the CAMS information and refuses the false alarm. A log-ratio against the trailing CAMS baseline passes through a tanh gate with κ = 0.45, so a large chemical spike cannot multiply the diurnal prior by more than about e^0.45. Ventilation, PBLH times 10 m wind, pulls the same forecast back down when the column is actually mixing."},
         {"type": "eq", "latex": r"\rho(s,t)=\exp\!\left(\kappa\tanh\!\left(\frac{1}{\kappa}\ln\frac{C(s,t)}{\max(\bar C_{T_0}(s,h),10)}\right)\right),\quad \kappa=0.45"},
         {"type": "h2", "text": "Eight forecasts, one closed hour"},
@@ -855,9 +944,10 @@ h1 .deva { font-family: "Tiro Devanagari Hindi", "Kohinoor Devanagari", serif; f
 .eq {
   overflow-x: auto;
   margin: 1.1rem 0 1.3rem;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
 }
-.plate { margin: 1.4rem 0 0.4rem; background: #F7F4EB; }
+.eq .katex-display { margin: 0.15rem 0; }
+.plate { margin: 1.4rem 0 0.4rem; background: #F7F4EB; width: 100%; }
 .plate svg { width: 100%; height: auto; display: block; }
 .caption { font-size: 0.78rem; line-height: 1.45; color: var(--muted); max-width: 46rem; margin: 0.45rem 0 1.2rem; }
 table { width: 100%; border-collapse: collapse; font-size: 0.78rem; line-height: 1.35; margin: 0.4rem 0; }
@@ -900,8 +990,64 @@ footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule);
 """
 
 
+def ensure_katex() -> str:
+    root = Path("/tmp/vd-katex")
+    module = root / "node_modules" / "katex"
+    if (module / "package.json").is_file():
+        return str(module)
+    root.mkdir(parents=True, exist_ok=True)
+    install = subprocess.run(
+        ["npm", "install", "--silent", "--prefix", str(root), "katex@0.16.22"],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if install.returncode != 0 or not (module / "package.json").is_file():
+        detail = (install.stderr or install.stdout or "npm install katex failed").strip()
+        raise SystemExit(detail)
+    return str(module)
+
+
+def typeset_display(latexes: list[str]) -> list[str]:
+    if not latexes:
+        return []
+    program = r"""
+const katex = require(process.env.KATEX_MODULE);
+const fs = require("fs");
+const items = JSON.parse(fs.readFileSync(0, "utf8"));
+const html = items.map((latex) => katex.renderToString(latex, {
+  displayMode: true,
+  throwOnError: true,
+  output: "htmlAndMathml",
+  strict: "ignore"
+}));
+process.stdout.write(JSON.stringify(html));
+"""
+    env = os.environ.copy()
+    env["KATEX_MODULE"] = ensure_katex()
+    result = subprocess.run(
+        ["node", "-e", program],
+        input=json.dumps(latexes),
+        text=True,
+        capture_output=True,
+        env=env,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise SystemExit(result.stderr.strip() or "katex failed")
+    rendered = json.loads(result.stdout)
+    if len(rendered) != len(latexes):
+        raise SystemExit("katex returned the wrong number of equations")
+    for html in rendered:
+        if "$" in html or 'class="katex"' not in html:
+            raise SystemExit("katex HTML is missing a typeset span or still contains a dollar sign")
+    return rendered
+
+
 def render_html(pieces, svgs: dict[str, str], gist_id: str) -> str:
     preview = f"https://gistpreview.github.io/?{gist_id}"
+    latexes = [block["latex"] for block in pieces if block["type"] == "eq"]
+    rendered_eq = dict(zip(latexes, typeset_display(latexes)))
     body = []
     for block in pieces:
         kind = block["type"]
@@ -918,7 +1064,7 @@ def render_html(pieces, svgs: dict[str, str], gist_id: str) -> str:
         elif kind == "note":
             body.append(f"<div class=\"row\"><aside class=\"sidenote\">{md_inline(block['text'])}</aside></div>")
         elif kind == "eq":
-            body.append(f'<div class="eq">$$\n{block["latex"]}\n$$</div>')
+            body.append('<div class="eq">' + rendered_eq[block["latex"]] + "</div>")
         elif kind == "fig":
             body.append(
                 '<div class="row wide"><figure class="plate">'
@@ -976,17 +1122,21 @@ def render_html(pieces, svgs: dict[str, str], gist_id: str) -> str:
     <p>VayuDrishti research monograph · November 2026 · <a href="{preview}">Magazine preview</a> · <a href="https://github.com/guglxni/VayuDrishti">Repository</a></p>
   </footer>
 </div>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {{
-  if (window.renderMathInElement) {{
-    renderMathInElement(document.body, {{
-      delimiters: [{{left: "$$", right: "$$", display: true}}],
-      throwOnError: false
-    }});
-  }}
-}});
+(function () {{
+  if (!window.renderMathInElement) return;
+  var root = document.querySelector(".sheet") || document.body;
+  renderMathInElement(root, {{
+    delimiters: [
+      {{left: "$$", right: "$$", display: true}},
+      {{left: "$", right: "$", display: false}}
+    ],
+    throwOnError: false,
+    ignoredTags: ["script", "noscript", "style", "textarea", "pre", "code", "svg"]
+  }});
+}})();
 </script>
 </body>
 </html>
@@ -1031,10 +1181,30 @@ def main() -> None:
     html = render_html(pieces, plates, gist_id)
     (OUT / "00_VayuDrishti_Research_Monograph.md").write_text(monograph, encoding="utf-8")
     (OUT / "index.html").write_text(html, encoding="utf-8")
+    expected = {
+        "cams_peak": "82.1",
+        "cams_h": "17:00",
+        "obs_trough": "41.9",
+        "obs_h": "14:00",
+        "cams_aft": "78.8",
+        "obs_aft": "42.7",
+        "r": "−0.668",
+    }
+    for key, value in expected.items():
+        if facts[key] != value:
+            raise SystemExit(f"printed fact changed {key}: {facts[key]!r} != {value!r}")
     required = ["9.1531", "9.2545", "6.2616", "6.0855", "0.0", "xP5LoEHK", "sK5XpFqb", facts["r"]]
     for needle in required:
         if needle not in monograph or needle not in html:
             raise SystemExit(f"missing {needle}")
+    for needle in ("82.1", "41.9", "78.8", "42.7", "9.1531", "9.2545", facts["r"], "37.9949", "38.8708"):
+        if needle not in plates["plate3"]:
+            raise SystemExit(f"plate3 missing {needle}")
+    article = html.split("<script>", 1)[0]
+    if "$" in article:
+        raise SystemExit("naked dollar sign remains in the article body")
+    if article.count('class="katex"') < 4:
+        raise SystemExit("equations were not typeset")
     print(json.dumps({"gist_id": gist_id, "facts": facts, "files": {
         name: (OUT / name).stat().st_size
         for name in list(FIG_FILES.values()) + ["00_VayuDrishti_Research_Monograph.md", "index.html"]

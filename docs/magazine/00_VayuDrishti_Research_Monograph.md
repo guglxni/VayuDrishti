@@ -40,7 +40,7 @@ Boundary-layer height in the same means runs from **84 m** at 05:00 to **1,863 m
 
 ![CAMS diurnal curve and October benchmark bars](https://raw.githubusercontent.com/guglxni/VayuDrishti/main/docs/magazine/plate3_diurnal_inversion_and_benchmarks.svg)
 
-*Fig. III. Left: hour-of-day means. Right: October out-of-fold RMSE. Solid bars are the 24-hour gap. Pale bars are the 72-hour gap. The 90-day mean (37.9949 / 38.8708) is left off the axis.*
+*Fig. III. Upper panel: hour-of-day means. Lower panel: October out-of-fold RMSE. Solid bars are the 24-hour gap. Pale bars are the 72-hour gap. The 90-day mean (37.9949 / 38.8708) is left off the axis.*
 
 Model 1 keeps the CAMS information and refuses the false alarm. A log-ratio against the trailing CAMS baseline passes through a tanh gate with κ = 0.45, so a large chemical spike cannot multiply the diurnal prior by more than about e^0.45. Ventilation, PBLH times 10 m wind, pulls the same forecast back down when the column is actually mixing.
 
