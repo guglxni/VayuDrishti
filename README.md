@@ -4,6 +4,9 @@ Zindi × Google × Beyond × ClimateVerse. **VayuDrishti (`वायुदृष
 
 - **Repository:** [`https://github.com/guglxni/VayuDrishti`](https://github.com/guglxni/VayuDrishti)
 - **Competition page:** [`google-mumbai-data-challenge`](https://zindi.africa/competitions/google-mumbai-data-challenge)
+- **Research monograph:** [वायुदृष्टि VayuDrishti — Physics-Guided Multi-Scale PM2.5 Forecasting](https://gist.github.com/guglxni/d5646cd8720da01fe1fb749fc86190ba) · [magazine edition](https://gistpreview.github.io/?d5646cd8720da01fe1fb749fc86190ba)
+
+![VayuDrishti monograph masthead](https://raw.githubusercontent.com/guglxni/VayuDrishti/main/docs/magazine/plate1_masthead_cover.svg)
 
 ## Tracks
 

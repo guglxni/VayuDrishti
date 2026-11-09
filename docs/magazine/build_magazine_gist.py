@@ -20,7 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUT = Path(__file__).resolve().parent
 RAW = "https://raw.githubusercontent.com/guglxni/VayuDrishti/main"
-GIST_TOKEN = "__GIST_ID__"
+GIST_TOKEN = "d5646cd8720da01fe1fb749fc86190ba"
 
 PAPER = "#F7F4EB"
 INK = "#0A1119"

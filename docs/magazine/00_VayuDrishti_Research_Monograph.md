@@ -4,7 +4,7 @@
 
 **Physics-guided multi-scale PM2.5 forecasting and a 3D atmospheric digital twin for Mumbai.**
 
-Live magazine: [open the edition](https://gistpreview.github.io/?__GIST_ID__). Code and plates: [guglxni/VayuDrishti](https://github.com/guglxni/VayuDrishti).
+Live magazine: [open the edition](https://gistpreview.github.io/?d5646cd8720da01fe1fb749fc86190ba). Code and plates: [guglxni/VayuDrishti](https://github.com/guglxni/VayuDrishti).
 
 ![VayuDrishti monograph masthead](https://raw.githubusercontent.com/guglxni/VayuDrishti/main/docs/magazine/plate1_masthead_cover.svg)
 
@@ -165,4 +165,4 @@ Plate III was drawn from Train.csv + Open-Meteo CAMS/PBLH, 1–21 October 2026, 
 
 ---
 
-VayuDrishti research monograph · November 2026 · [preview](https://gistpreview.github.io/?__GIST_ID__) · [repository](https://github.com/guglxni/VayuDrishti)
+VayuDrishti research monograph · November 2026 · [preview](https://gistpreview.github.io/?d5646cd8720da01fe1fb749fc86190ba) · [repository](https://github.com/guglxni/VayuDrishti)
