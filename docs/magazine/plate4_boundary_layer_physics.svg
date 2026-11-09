@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-label="Coastal boundary-layer cross-section">
+<title>Coastal boundary-layer cross-section</title>
+<rect width="100%" height="100%" fill="#F7F4EB"/>
+
+<style>
+  .p-serif { font-family: "Newsreader", Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif; fill: #0A1119; }
+  .p-mono { font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; fill: #0A1119; }
+  .p-deva { font-family: "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Kohinoor Devanagari", "Nirmala UI", serif; fill: #0A1119; }
+  .p-muted { fill: #5E564C; }
+  .p-terra { fill: #C84B31; }
+  .p-sea { fill: #2F5D62; }
+  .p-wind { fill: none; stroke: #2F5D62; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 1.5 8; animation: vd-drift 11s linear infinite; }
+  .p-dash { fill: none; stroke: #C84B31; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 4 7; animation: vd-drift 7.5s linear infinite; }
+  .p-beacon { fill: none; stroke: #C84B31; stroke-width: 1.15; transform-box: fill-box; transform-origin: center; animation: vd-pulse 2.8s ease-out infinite; }
+  .p-lid { transform-box: fill-box; transform-origin: center; animation: vd-breathe 8.5s ease-in-out infinite; }
+  @keyframes vd-drift { to { stroke-dashoffset: -240; } }
+  @keyframes vd-pulse { 0% { opacity: 0.9; } 75% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes vd-breathe { 0%, 100% { transform: translateY(7px); } 50% { transform: translateY(-16px); } }
+</style>
+
+<rect x="10" y="10" width="1180" height="380" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="372" fill="none" stroke="#C84B31" stroke-width="0.6"/>
+<text x="36" y="42" class="p-mono p-terra" font-size="12" text-anchor="start" >FIG. IV</text>
+<text x="36" y="74" class="p-serif" font-size="28" text-anchor="start" >A west wind, a landfill, and a creek</text>
+<text x="36" y="98" class="p-serif p-muted" font-size="14" text-anchor="start" >Schematic coastal sequence. Vertical scale is drawn so both lids stay visible.</text>
+<rect x="36" y="150" width="150" height="150" fill="#D7E4E1"/>
+<path d="M186 300 L186 250 C 240 246, 300 236, 360 240 C 430 246, 470 228, 530 232 C 600 238, 650 226, 730 230 C 790 234, 830 248, 860 252 L 860 300 Z" fill="#E6DDD0" stroke="#0A1119" stroke-width="0.8"/>
+<rect x="860" y="250" width="120" height="50" fill="#D7E4E1"/>
+<path d="M980 300 L980 256 C 1040 250, 1100 258, 1148 254 L 1148 300 Z" fill="#E6DDD0" stroke="#0A1119" stroke-width="0.8"/>
+<path class="p-wind" d="M48 176 C 120 168, 180 184, 250 172"/>
+<path class="p-wind" d="M40 200 C 130 194, 200 208, 280 198" style="animation-delay:-3s"/>
+<path class="p-dash" d="M980 214 C 900 208, 820 220, 740 210"/>
+<path d="M48 132 C 220 124, 420 118, 640 126 C 860 134, 1000 122, 1152 128" fill="none" stroke="#2F5D62" stroke-width="1.5" stroke-dasharray="5 6"/>
+<text x="48" y="116" class="p-mono p-sea" font-size="11" text-anchor="start" >afternoon mean  1,863 m at 12:00</text>
+<g class="p-lid"><path d="M48 236 C 220 228, 420 232, 640 226 C 860 220, 1000 230, 1152 224" fill="none" stroke="#C84B31" stroke-width="1.7"/><text x="700" y="218" class="p-mono p-terra" font-size="11">nocturnal mean  84 m at 05:00</text></g>
+<line x1="90" y1="300" x2="90" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="90" y="334" class="p-serif" font-size="12" text-anchor="middle" >Arabian Sea</text>
+<text x="90" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >285° onshore</text>
+<line x1="250" y1="300" x2="250" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="250" y="334" class="p-serif" font-size="12" text-anchor="middle" >Malad West</text>
+<text x="250" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >11611</text>
+<line x1="400" y1="300" x2="400" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="400" y="334" class="p-serif" font-size="12" text-anchor="middle" >Borivali East</text>
+<text x="400" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >11606</text>
+<line x1="560" y1="300" x2="560" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="560" y="334" class="p-serif" font-size="12" text-anchor="middle" >Byculla</text>
+<text x="560" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >3409510</text>
+<line x1="760" y1="300" x2="760" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="760" y="334" class="p-serif" font-size="12" text-anchor="middle" >Shivaji Nagar</text>
+<text x="760" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >3409511 · Deonar 75°</text>
+<line x1="910" y1="300" x2="910" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="910" y="334" class="p-serif" font-size="12" text-anchor="middle" >Thane Creek</text>
+<text x="910" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >110°</text>
+<line x1="1060" y1="300" x2="1060" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="1060" y="334" class="p-serif" font-size="12" text-anchor="middle" >Navi Mumbai</text>
+<text x="1060" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >MIDC shore</text>
+<text x="36" y="378" class="p-mono p-muted" font-size="11" text-anchor="start" >Onshore flow 285° from the Arabian Sea. Deonar drainage near 75°. Creek axis near 110°.</text>
+</svg>

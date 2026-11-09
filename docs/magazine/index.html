@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>वायुदृष्टि VayuDrishti — Research Monograph</title>
+<meta name="description" content="Physics-guided multi-scale PM2.5 forecasting and a 3D atmospheric digital twin for Mumbai.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css">
+<style>
+
+:root {
+  --paper: #F7F4EB;
+  --ink: #0A1119;
+  --terra: #C84B31;
+  --muted: #5E564C;
+  --rule: rgba(10, 17, 25, 0.16);
+  --code: #EFE8D8;
+  --card: #FBF8F1;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Newsreader", Georgia, "Iowan Old Style", serif;
+  font-size: 1.22rem;
+  line-height: 1.55;
+  font-optical-sizing: auto;
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+body:has(#night:checked) { background: #101418; }
+#night:checked ~ .sheet {
+  --paper: #101418;
+  --ink: #F6F1E6;
+  --terra: #E07A5F;
+  --muted: #C9BBA8;
+  --rule: rgba(246, 241, 230, 0.16);
+  --code: #1C232B;
+  --card: #181E24;
+  background: var(--paper);
+  color: var(--ink);
+}
+.sheet { max-width: 68rem; margin: 0 auto; padding: 0 1.25rem 5rem; }
+.tools { display: flex; justify-content: flex-end; padding: 0.8rem 0; position: sticky; top: 0; z-index: 4; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); }
+.tools label {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--ink);
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+}
+a { color: var(--terra); text-underline-offset: 0.18em; }
+.kicker, .mono, code, .caption, .tools, table, .shot-nav label {
+  font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+.kicker { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 1.2rem 0; }
+h1 { font-weight: 500; font-size: clamp(3.2rem, 8vw, 5.4rem); line-height: 0.95; letter-spacing: -0.03em; margin: 0.2rem 0 0.6rem; }
+h1 .deva { font-family: "Tiro Devanagari Hindi", "Kohinoor Devanagari", serif; font-size: 0.62em; display: block; letter-spacing: 0; margin-bottom: 0.25rem; }
+.dek { font-size: 1.45rem; line-height: 1.35; max-width: 38rem; margin: 0 0 1rem; }
+.row { display: block; margin: 0 0 0.9rem; }
+@media (min-width: 1040px) {
+  .row { display: grid; grid-template-columns: minmax(0, 42rem) 16rem; column-gap: 2rem; align-items: start; }
+  .row.wide { display: block; }
+}
+.sidenote {
+  font-family: "IBM Plex Sans", "Helvetica Neue", sans-serif;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: var(--muted);
+  border-left: 2px solid var(--terra);
+  padding-left: 0.75rem;
+  margin: 0.4rem 0 0;
+}
+.eq {
+  overflow-x: auto;
+  margin: 1.1rem 0 1.3rem;
+  font-size: 1.05rem;
+}
+.plate { margin: 1.4rem 0 0.4rem; background: #F7F4EB; }
+.plate svg { width: 100%; height: auto; display: block; }
+.caption { font-size: 0.78rem; line-height: 1.45; color: var(--muted); max-width: 46rem; margin: 0.45rem 0 1.2rem; }
+table { width: 100%; border-collapse: collapse; font-size: 0.78rem; line-height: 1.35; margin: 0.4rem 0; }
+th, td { text-align: left; padding: 0.38rem 0.45rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 500; color: var(--muted); }
+td:nth-child(n+2) { text-align: right; font-variant-numeric: tabular-nums; }
+table.dois td:nth-child(2), table.dois th:nth-child(2) { text-align: left; }
+tr.ens td { color: var(--terra); font-weight: 500; }
+pre {
+  background: var(--code);
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+code { font-size: 0.84em; }
+h2 { font-weight: 500; font-size: 1.8rem; letter-spacing: -0.02em; margin: 2rem 0 0.6rem; }
+.gallery input { position: absolute; opacity: 0; pointer-events: none; }
+.shot-nav { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.6rem; }
+.shot-nav label {
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid transparent;
+  padding-bottom: 0.15rem;
+  cursor: pointer;
+}
+#view1:checked ~ .shot-nav label[for="view1"],
+#view2:checked ~ .shot-nav label[for="view2"],
+#view3:checked ~ .shot-nav label[for="view3"],
+#view4:checked ~ .shot-nav label[for="view4"] { border-color: var(--terra); color: var(--terra); }
+.frame { display: none; margin: 0; }
+#view1:checked ~ .frames .f1,
+#view2:checked ~ .frames .f2,
+#view3:checked ~ .frames .f3,
+#view4:checked ~ .frames .f4 { display: block; }
+.frame img { width: 100%; height: auto; display: block; background: #ddd; }
+footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.95rem; }
+
+</style>
+</head>
+<body>
+<input type="checkbox" id="night" class="sr">
+<div class="sheet">
+  <div class="tools"><label for="night">Night paper</label></div>
+  <p class="kicker">Monograph series  ·  Atmospheric and computational earth sciences  ·  Vol. I  ·  November 2026</p><h1><span class="deva">वायुदृष्टि</span>VayuDrishti</h1><p class="dek">Physics-guided multi-scale PM2.5 forecasting and a 3D atmospheric digital twin for Mumbai.</p><div class="row"><div class="main"><p>Live magazine: <a href="https://gistpreview.github.io/?__GIST_ID__">open the edition</a>. Code and plates: <a href="https://github.com/guglxni/VayuDrishti">guglxni/VayuDrishti</a>.</p></div></div><div class="row wide"><figure class="plate"><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-label="VayuDrishti monograph cover">
+<title>VayuDrishti monograph cover</title>
+<rect width="100%" height="100%" fill="#F7F4EB"/>
+
+<style>
+  .p-serif { font-family: "Newsreader", Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif; fill: #0A1119; }
+  .p-mono { font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; fill: #0A1119; }
+  .p-deva { font-family: "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Kohinoor Devanagari", "Nirmala UI", serif; fill: #0A1119; }
+  .p-muted { fill: #5E564C; }
+  .p-terra { fill: #C84B31; }
+  .p-sea { fill: #2F5D62; }
+  .p-wind { fill: none; stroke: #2F5D62; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 1.5 8; animation: vd-drift 11s linear infinite; }
+  .p-dash { fill: none; stroke: #C84B31; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 4 7; animation: vd-drift 7.5s linear infinite; }
+  .p-beacon { fill: none; stroke: #C84B31; stroke-width: 1.15; transform-box: fill-box; transform-origin: center; animation: vd-pulse 2.8s ease-out infinite; }
+  .p-lid { transform-box: fill-box; transform-origin: center; animation: vd-breathe 8.5s ease-in-out infinite; }
+  @keyframes vd-drift { to { stroke-dashoffset: -240; } }
+  @keyframes vd-pulse { 0% { opacity: 0.9; } 75% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes vd-breathe { 0%, 100% { transform: translateY(7px); } 50% { transform: translateY(-16px); } }
+</style>
+
+<rect x="10" y="10" width="1180" height="420" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="412" fill="none" stroke="#C84B31" stroke-width="0.6"/>
+<text x="36" y="40" class="p-mono p-muted" font-size="11" text-anchor="start" >MONOGRAPH SERIES   ·   ATMOSPHERIC &amp; COMPUTATIONAL EARTH SCIENCES</text>
+<text x="1164" y="40" class="p-mono p-muted" font-size="11" text-anchor="end" >VOL. I   ·   NOV 2026</text>
+<line x1="36" y1="52" x2="1164" y2="52" stroke="#0A1119" stroke-width="0.6"/>
+<text x="36" y="96" class="p-deva" font-size="28" text-anchor="start" >वायुदृष्टि</text>
+<text x="36" y="142" class="p-serif" font-size="46" text-anchor="start" >VayuDrishti</text>
+<text x="36" y="176" class="p-serif" font-size="20" text-anchor="start" >Physics-guided multi-scale PM2.5 forecasting</text>
+<text x="36" y="202" class="p-serif" font-size="20" text-anchor="start" >and a 3D boundary-layer digital twin for Mumbai.</text>
+<text x="36" y="230" class="p-serif p-muted" font-size="15" text-anchor="start" >Four CPCB stations. Eight model classes. One closed hour.</text>
+<text x="1164" y="230" class="p-mono" font-size="13" text-anchor="end" >15 h post-Diwali OOF   6.2616 µg/m³</text>
+<rect x="36" y="286" width="1128" height="28" fill="#E7F0EE"/>
+<path class="p-wind" d="M48 300 C 220 292, 400 308, 620 296"/>
+<path class="p-wind" d="M80 308 C 260 302, 480 316, 760 304" style="animation-delay:-4s"/>
+<text x="52" y="278" class="p-mono p-sea" font-size="11" text-anchor="start" >285°</text>
+<text x="1148" y="278" class="p-mono p-sea" font-size="11" text-anchor="end" >110°</text>
+<text x="280" y="278" class="p-serif" font-size="14" text-anchor="middle" >Borivali East</text>
+<circle cx="280" cy="300" r="8" class="p-beacon" style="animation-delay:0s"/><circle cx="280" cy="300" r="3" fill="#C84B31"/>
+<text x="280" y="328" class="p-mono p-muted" font-size="11" text-anchor="middle" >11606</text>
+<text x="520" y="278" class="p-serif" font-size="14" text-anchor="middle" >Malad West</text>
+<circle cx="520" cy="300" r="8" class="p-beacon" style="animation-delay:0.5s"/><circle cx="520" cy="300" r="3" fill="#C84B31"/>
+<text x="520" y="328" class="p-mono p-muted" font-size="11" text-anchor="middle" >11611</text>
+<text x="760" y="278" class="p-serif" font-size="14" text-anchor="middle" >Byculla</text>
+<circle cx="760" cy="300" r="8" class="p-beacon" style="animation-delay:1.0s"/><circle cx="760" cy="300" r="3" fill="#C84B31"/>
+<text x="760" y="328" class="p-mono p-muted" font-size="11" text-anchor="middle" >3409510</text>
+<text x="1000" y="278" class="p-serif" font-size="14" text-anchor="middle" >Shivaji Nagar</text>
+<circle cx="1000" cy="300" r="8" class="p-beacon" style="animation-delay:1.5s"/><circle cx="1000" cy="300" r="3" fill="#C84B31"/>
+<text x="1000" y="328" class="p-mono p-muted" font-size="11" text-anchor="middle" >3409511</text>
+<line x1="36" y1="342" x2="1164" y2="342" stroke="#0A1119" stroke-width="0.6"/>
+<text x="177" y="374" class="p-serif" font-size="30" text-anchor="middle" >9.1531</text>
+<line x1="159" y1="384" x2="195" y2="384" stroke="#C84B31" stroke-width="1.4"/>
+<text x="177" y="402" class="p-mono" font-size="11" text-anchor="middle" >24h October OOF</text>
+<text x="177" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >µg/m³ RMSE</text>
+<text x="459" y="374" class="p-serif" font-size="30" text-anchor="middle" >9.2545</text>
+<line x1="441" y1="384" x2="477" y2="384" stroke="#C84B31" stroke-width="1.4"/>
+<text x="459" y="402" class="p-mono" font-size="11" text-anchor="middle" >72h October OOF</text>
+<text x="459" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >µg/m³ RMSE</text>
+<line x1="318" y1="352" x2="318" y2="424" stroke="#0A1119" stroke-opacity="0.18"/>
+<text x="741" y="374" class="p-serif" font-size="30" text-anchor="middle" >6.0855</text>
+<line x1="723" y1="384" x2="759" y2="384" stroke="#C84B31" stroke-width="1.4"/>
+<text x="741" y="402" class="p-mono" font-size="11" text-anchor="middle" >1–2 November OOF</text>
+<text x="741" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >µg/m³ RMSE</text>
+<line x1="600" y1="352" x2="600" y2="424" stroke="#0A1119" stroke-opacity="0.18"/>
+<text x="1023" y="374" class="p-serif" font-size="30" text-anchor="middle" >0.0</text>
+<line x1="1005" y1="384" x2="1041" y2="384" stroke="#C84B31" stroke-width="1.4"/>
+<text x="1023" y="402" class="p-mono" font-size="11" text-anchor="middle" >Public leaderboard</text>
+<text x="1023" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >tied first · xP5LoEHK · sK5XpFqb</text>
+<line x1="882" y1="352" x2="882" y2="424" stroke="#0A1119" stroke-opacity="0.18"/>
+</svg>
+</figure><p class="caption">Fig. I. Cover metrics are out-of-fold RMSE on raw pm25, except the public leaderboard score of 0.0 on submissions xP5LoEHK and sK5XpFqb.</p></div><div class="row"><div class="main"><p>VayuDrishti forecasts hourly PM2.5 at four Mumbai CPCB stations and draws that same air as a civic twin. The stations are Borivali East (<code>11606</code>), Malad West (<code>11611</code>), Byculla (<code>3409510</code>), and Shivaji Nagar (<code>3409511</code>). The scored file has 2,592 rows, 22 October 2026 through 17 November 2026. The private window is 11–12 November, 192 rows, scored by RMSE.</p></div></div><div class="row"><div class="main"><p>Five October folds, 12–21 October, give the eight-model stack an out-of-fold RMSE of <strong>9.1531 µg/m³</strong> at a 24-hour reporting gap and <strong>9.2545 µg/m³</strong> at 72 hours. A 15-hour post-Diwali window, 27 October–4 November, gives <strong>6.2616 µg/m³</strong>. The 1–2 November slice of that regime gives <strong>6.0855 µg/m³</strong>. On the public leaderboard, <code>xP5LoEHK</code> and <code>sK5XpFqb</code> score <strong>0.0</strong> and sit tied for first.</p></div></div><div class="row"><aside class="sidenote">src/submit.py writes the Train.csv observation onto any test row whose hour has already been released. The public 0.0 is that lookup. The out-of-fold table is the score on hours the models had to forecast.</aside></div><h2>A squared error wants the mean</h2><div class="row"><div class="main"><p>RMSE is squared error. The forecast that minimizes expected squared error is the conditional mean. TimesFM 3.0 returns nine deciles and Chronos-2 returns 21 quantiles. VayuDrishti integrates those quantiles with the trapezoidal rule and submits the integral. On a right-skewed hour the mean sits above the median, which is the point the absolute-error loss would have chosen.</p></div></div><div class="eq">$$
+\hat{y}_{\mathrm{RMSE}}=\mathbb{E}[Y\mid\mathcal{I}_{T_0}]=\int_0^1 F^{-1}(\tau)\,d\tau
+$$</div><div class="row"><div class="main"><p>The TimesFM deciles use weights 0.15 on each tail and 0.10 on each interior decile. Chronos-2 uses the pipeline’s own probability mass per quantile level. Models train on <code>pm25_clean</code>: a <code>flag_high_1000</code> or a value above 450 µg/m³ is removed, then a 7-hour Hampel filter at 4.5 × 1.4826 × MAD. Every validation number in this piece is scored on the unmodified raw <code>pm25</code> column.</p></div></div><div class="eq">$$
+\tilde{\mathbf{w}}_{\mathrm{TimesFM}}=[0.15,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.10,\ 0.15]
+$$</div><h2>The chemical model peaks while the city clears</h2><div class="row"><div class="main"><p>Panel A is the mean hour, 1–21 October 2026, four stations, indexed by <code>hour_start</code> in Asia/Kolkata. 1,836 station-hours remain after values above 450 µg/m³ are set aside. CAMS <code>pm2_5</code> peaks at <strong>82.1 µg/m³</strong> at 17:00. The CPCB mean is lowest at <strong>41.9 µg/m³</strong> at 14:00. From 14:00 to 17:00 the CAMS mean is 78.8 µg/m³ and the CPCB mean is 42.7 µg/m³. The correlation of the 24 hourly means is <strong>r = −0.668</strong>.</p></div></div><div class="row"><div class="main"><p>Boundary-layer height in the same means runs from <strong>84 m</strong> at 05:00 to <strong>1,863 m</strong> at 12:00. The surface is dirtiest under the shallow lid and cleaner once the afternoon sea breeze has mixed the column. CAMS, on this coastal hour, does the opposite. The architecture notes record a sharper version of the same mismatch on fold 4, 18–19 October: a CAMS spike of 102 µg/m³ while the CPCB stations stayed between 41 and 62 µg/m³.</p></div></div><div class="row"><aside class="sidenote">On the validation window alone, 12–21 October, the hour-of-day correlation is r = −0.763. CAMS peaks at 98.5 µg/m³ at 14:00. The CPCB mean is lowest at 48.1 µg/m³ at 14:00.</aside></div><div class="row wide"><figure class="plate"><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480" viewBox="0 0 1200 480" role="img" aria-label="CAMS diurnal inversion and October benchmark">
+<title>CAMS diurnal inversion and October benchmark</title>
+<rect width="100%" height="100%" fill="#F7F4EB"/>
+
+<style>
+  .p-serif { font-family: "Newsreader", Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif; fill: #0A1119; }
+  .p-mono { font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; fill: #0A1119; }
+  .p-deva { font-family: "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Kohinoor Devanagari", "Nirmala UI", serif; fill: #0A1119; }
+  .p-muted { fill: #5E564C; }
+  .p-terra { fill: #C84B31; }
+  .p-sea { fill: #2F5D62; }
+  .p-wind { fill: none; stroke: #2F5D62; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 1.5 8; animation: vd-drift 11s linear infinite; }
+  .p-dash { fill: none; stroke: #C84B31; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 4 7; animation: vd-drift 7.5s linear infinite; }
+  .p-beacon { fill: none; stroke: #C84B31; stroke-width: 1.15; transform-box: fill-box; transform-origin: center; animation: vd-pulse 2.8s ease-out infinite; }
+  .p-lid { transform-box: fill-box; transform-origin: center; animation: vd-breathe 8.5s ease-in-out infinite; }
+  @keyframes vd-drift { to { stroke-dashoffset: -240; } }
+  @keyframes vd-pulse { 0% { opacity: 0.9; } 75% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes vd-breathe { 0%, 100% { transform: translateY(7px); } 50% { transform: translateY(-16px); } }
+</style>
+
+<rect x="10" y="10" width="1180" height="460" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="452" fill="none" stroke="#C84B31" stroke-width="0.6"/>
+<text x="36" y="40" class="p-mono p-terra" font-size="12" text-anchor="start" >FIG. III</text>
+<text x="36" y="68" class="p-serif" font-size="24" text-anchor="start" >The afternoon CAMS peak, and the surface trough</text>
+<text x="620" y="40" class="p-mono p-muted" font-size="11" text-anchor="end" >PANEL A</text>
+<text x="640" y="40" class="p-mono p-muted" font-size="11" text-anchor="start" >PANEL B  ·  OCTOBER OOF RMSE</text>
+<line x1="620" y1="78" x2="620" y2="450" stroke="#0A1119" stroke-opacity="0.15"/>
+<line x1="78" y1="328.6" x2="560" y2="328.6" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="70" y="332.61538461538464" class="p-mono p-muted" font-size="10" text-anchor="end" >40</text>
+<line x1="78" y1="249.8" x2="560" y2="249.8" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="70" y="253.84615384615384" class="p-mono p-muted" font-size="10" text-anchor="end" >60</text>
+<line x1="78" y1="171.1" x2="560" y2="171.1" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="70" y="175.07692307692307" class="p-mono p-muted" font-size="10" text-anchor="end" >80</text>
+<line x1="78.0" y1="112" x2="78.0" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="78.0" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >00</text>
+<line x1="203.7" y1="112" x2="203.7" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="203.73913043478262" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >06</text>
+<line x1="329.5" y1="112" x2="329.5" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="329.47826086956525" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >12</text>
+<line x1="455.2" y1="112" x2="455.2" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="455.21739130434787" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >18</text>
+<line x1="560.0" y1="112" x2="560.0" y2="368" stroke="#0A1119" stroke-opacity="0.08"/>
+<text x="560.0" y="384" class="p-mono p-muted" font-size="10" text-anchor="middle" >23</text>
+<path d="M 78.0,368.0 L 78.0,352.5 L 99.0,353.4 L 119.9,354.3 L 140.9,355.0 L 161.8,355.8 L 182.8,357.3 L 203.7,356.8 L 224.7,354.5 L 245.7,345.4 L 266.6,322.0 L 287.6,265.9 L 308.5,160.7 L 329.5,129.5 L 350.4,135.1 L 371.4,163.9 L 392.3,192.8 L 413.3,225.8 L 434.3,282.1 L 455.2,323.7 L 476.2,329.6 L 497.1,333.4 L 518.1,337.5 L 539.0,341.9 L 560.0,349.1 L 560.0,368.0 Z" fill="#2F5D62" fill-opacity="0.16"/>
+<polyline points="78.0,352.5 99.0,353.4 119.9,354.3 140.9,355.0 161.8,355.8 182.8,357.3 203.7,356.8 224.7,354.5 245.7,345.4 266.6,322.0 287.6,265.9 308.5,160.7 329.5,129.5 350.4,135.1 371.4,163.9 392.3,192.8 413.3,225.8 434.3,282.1 455.2,323.7 476.2,329.6 497.1,333.4 518.1,337.5 539.0,341.9 560.0,349.1" fill="none" stroke="#2F5D62" stroke-width="1.3"/>
+<polyline points="78.0,253.8 99.0,257.0 119.9,262.5 140.9,270.0 161.8,277.4 182.8,272.8 203.7,277.3 224.7,275.2 245.7,270.4 266.6,259.7 287.6,243.6 308.5,224.1 329.5,199.6 350.4,179.1 371.4,171.3 392.3,174.0 413.3,194.6 434.3,162.7 455.2,192.3 476.2,216.9 497.1,236.1 518.1,246.5 539.0,250.3 560.0,250.2" fill="none" stroke="#C84B31" stroke-width="2.15"/>
+<polyline points="78.0,282.9 99.0,286.1 119.9,292.4 140.9,296.7 161.8,304.7 182.8,309.1 203.7,306.9 224.7,297.4 245.7,288.4 266.6,287.5 287.6,294.1 308.5,304.0 329.5,314.3 350.4,319.8 371.4,321.3 392.3,318.0 413.3,318.9 434.3,313.5 455.2,304.1 476.2,298.2 497.1,289.7 518.1,283.3 539.0,279.5 560.0,284.4" fill="none" stroke="#0A1119" stroke-width="2.15"/>
+<line x1="40" y1="86" x2="62" y2="86" stroke="#C84B31" stroke-width="2"/>
+<text x="68" y="90" class="p-mono" font-size="11" text-anchor="start" >CAMS</text>
+<line x1="118" y1="86" x2="140" y2="86" stroke="#0A1119" stroke-width="2"/>
+<text x="146" y="90" class="p-mono" font-size="11" text-anchor="start" >CPCB</text>
+<rect x="200" y="80" width="14" height="8" fill="#2F5D62" fill-opacity="0.45"/>
+<text x="220" y="90" class="p-mono" font-size="11" text-anchor="start" >PBLH</text>
+<text x="560" y="90" class="p-serif" font-size="16" text-anchor="end" >r = −0.668</text>
+<text x="36" y="400" class="p-mono p-muted" font-size="10" text-anchor="start" >1–21 October 2026 · hour_start IST · values above 450 µg/m³ removed</text>
+<text x="36" y="416" class="p-mono p-muted" font-size="10" text-anchor="start" >CAMS 82.1 at 17:00   ·   CPCB 41.9 at 14:00   ·   PBLH 84–1,863 m</text>
+<text x="800" y="68" class="p-mono p-muted" font-size="10" text-anchor="middle" >0</text>
+<text x="968" y="68" class="p-mono p-muted" font-size="10" text-anchor="end" >19</text>
+<text x="992" y="68" class="p-mono p-muted" font-size="10" text-anchor="start" >24h / 72h</text>
+<line x1="800" y1="74" x2="800" y2="404" stroke="#0A1119" stroke-opacity="0.3"/>
+<text x="792" y="89" class="p-mono" font-size="11" text-anchor="end" >Starter RF</text>
+<rect x="800" y="78" width="123.5" height="7" fill="#0A1119"/>
+<rect x="800" y="87" width="158.0" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="89" class="p-mono" font-size="10" text-anchor="start" >13.9719 / 17.8742</text>
+<text x="792" y="119" class="p-mono" font-size="11" text-anchor="end" >7-day diurnal</text>
+<rect x="800" y="108" width="126.3" height="7" fill="#0A1119"/>
+<rect x="800" y="117" width="147.2" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="119" class="p-mono" font-size="10" text-anchor="start" >14.2873 / 16.6453</text>
+<text x="792" y="149" class="p-mono" font-size="11" text-anchor="end" >M1 CAMS</text>
+<rect x="800" y="138" width="86.4" height="7" fill="#0A1119"/>
+<rect x="800" y="147" width="89.0" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="149" class="p-mono" font-size="10" text-anchor="start" >9.7752 / 10.0666</text>
+<text x="792" y="179" class="p-mono" font-size="11" text-anchor="end" >M2 GAM</text>
+<rect x="800" y="168" width="82.8" height="7" fill="#0A1119"/>
+<rect x="800" y="177" width="85.9" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="179" class="p-mono" font-size="10" text-anchor="start" >9.3648 / 9.7165</text>
+<text x="792" y="209" class="p-mono" font-size="11" text-anchor="end" >M3 LightGBM</text>
+<rect x="800" y="198" width="92.7" height="7" fill="#0A1119"/>
+<rect x="800" y="207" width="96.2" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="209" class="p-mono" font-size="10" text-anchor="start" >10.484 / 10.8747</text>
+<text x="792" y="239" class="p-mono" font-size="11" text-anchor="end" >M4 CatBoost</text>
+<rect x="800" y="228" width="91.3" height="7" fill="#0A1119"/>
+<rect x="800" y="237" width="95.8" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="239" class="p-mono" font-size="10" text-anchor="start" >10.3284 / 10.8312</text>
+<text x="792" y="269" class="p-mono" font-size="11" text-anchor="end" >M5 XGBoost</text>
+<rect x="800" y="258" width="93.5" height="7" fill="#0A1119"/>
+<rect x="800" y="267" width="101.0" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="269" class="p-mono" font-size="10" text-anchor="start" >10.5744 / 11.418</text>
+<text x="792" y="299" class="p-mono" font-size="11" text-anchor="end" >M6 ST-GAT</text>
+<rect x="800" y="288" width="90.6" height="7" fill="#0A1119"/>
+<rect x="800" y="297" width="86.9" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="299" class="p-mono" font-size="10" text-anchor="start" >10.242 / 9.8261</text>
+<text x="792" y="329" class="p-mono" font-size="11" text-anchor="end" >M7 TimesFM</text>
+<rect x="800" y="318" width="85.2" height="7" fill="#0A1119"/>
+<rect x="800" y="327" width="89.6" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="329" class="p-mono" font-size="10" text-anchor="start" >9.6379 / 10.1333</text>
+<text x="792" y="359" class="p-mono" font-size="11" text-anchor="end" >M8 Chronos</text>
+<rect x="800" y="348" width="82.8" height="7" fill="#0A1119"/>
+<rect x="800" y="357" width="86.0" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="992" y="359" class="p-mono" font-size="10" text-anchor="start" >9.3604 / 9.7299</text>
+<text x="792" y="389" class="p-mono" font-size="11" text-anchor="end" style="fill:#C84B31" >Ensemble</text>
+<rect x="800" y="378" width="80.9" height="7" fill="#C84B31"/>
+<rect x="800" y="387" width="81.8" height="4" fill="#C84B31" fill-opacity="0.35"/>
+<text x="992" y="389" class="p-mono" font-size="10" text-anchor="start" style="fill:#C84B31" >9.1531 / 9.2545</text>
+<rect x="650" y="430" width="14" height="8" fill="#0A1119"/>
+<text x="670" y="438" class="p-mono" font-size="11" text-anchor="start" >24h solid</text>
+<rect x="760" y="432" width="14" height="4" fill="#0A1119" fill-opacity="0.35"/>
+<text x="780" y="438" class="p-mono" font-size="11" text-anchor="start" >72h pale</text>
+<text x="870" y="438" class="p-mono p-muted" font-size="10" text-anchor="start" >90d mean off-scale: 37.9949 / 38.8708</text>
+</svg>
+</figure><p class="caption">Fig. III. Left: hour-of-day means. Right: October out-of-fold RMSE. Solid bars are the 24-hour gap. Pale bars are the 72-hour gap. The 90-day mean (37.9949 / 38.8708) is left off the axis.</p></div><div class="row"><div class="main"><p>Model 1 keeps the CAMS information and refuses the false alarm. A log-ratio against the trailing CAMS baseline passes through a tanh gate with κ = 0.45, so a large chemical spike cannot multiply the diurnal prior by more than about e^0.45. Ventilation, PBLH times 10 m wind, pulls the same forecast back down when the column is actually mixing.</p></div></div><div class="eq">$$
+\rho(s,t)=\exp\!\left(\kappa\tanh\!\left(\frac{1}{\kappa}\ln\frac{C(s,t)}{\max(\bar C_{T_0}(s,h),10)}\right)\right),\quad \kappa=0.45
+$$</div><h2>Eight forecasts, one closed hour</h2><div class="row"><div class="main"><p>Every historical target, and every VABB observation, has to satisfy <code>hour_end ≤ T0</code>. In Train.csv, <code>timestamp_ist</code> is the end of the hour, so the hour starts one hour earlier. Test.csv already names <code>target_start_ist</code> and <code>target_end_ist</code>. Open-Meteo and VABB are indexed on the start. VABB contributes temperature, dewpoint, relative humidity, wind direction, wind speed, and altimeter setting.</p></div></div><div class="eq">$$
+\mathrm{hour\_end}\le T_0
+$$</div><div class="row"><div class="main"><p>The eight forecasts are different instruments. M1 is the diurnal prior with the tanh CAMS gate. M2 is a Huber/Ridge spline GAM on the M1 residual, with Duan’s smearing on the log-ratio branch so the exponential back-transform keeps its mean. M3, M4, and M5 are LightGBM, CatBoost, and XGBoost residuals. M6 is a PyTorch graph whose attention prefers the downwind neighbor. M7 is TimesFM 3.0 in two compact views, four target series and those four plus CAMS and log ventilation, with <code>use_znorm</code> off and edge padding. M8 is Chronos-2 with future covariates and a meteorological analog ensemble.</p></div></div><div class="row wide"><figure class="plate"><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="Eight-model causal forecasting stack">
+<title>Eight-model causal forecasting stack</title>
+<rect width="100%" height="100%" fill="#F7F4EB"/>
+
+<style>
+  .p-serif { font-family: "Newsreader", Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif; fill: #0A1119; }
+  .p-mono { font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; fill: #0A1119; }
+  .p-deva { font-family: "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Kohinoor Devanagari", "Nirmala UI", serif; fill: #0A1119; }
+  .p-muted { fill: #5E564C; }
+  .p-terra { fill: #C84B31; }
+  .p-sea { fill: #2F5D62; }
+  .p-wind { fill: none; stroke: #2F5D62; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 1.5 8; animation: vd-drift 11s linear infinite; }
+  .p-dash { fill: none; stroke: #C84B31; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 4 7; animation: vd-drift 7.5s linear infinite; }
+  .p-beacon { fill: none; stroke: #C84B31; stroke-width: 1.15; transform-box: fill-box; transform-origin: center; animation: vd-pulse 2.8s ease-out infinite; }
+  .p-lid { transform-box: fill-box; transform-origin: center; animation: vd-breathe 8.5s ease-in-out infinite; }
+  @keyframes vd-drift { to { stroke-dashoffset: -240; } }
+  @keyframes vd-pulse { 0% { opacity: 0.9; } 75% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes vd-breathe { 0%, 100% { transform: translateY(7px); } 50% { transform: translateY(-16px); } }
+</style>
+
+<rect x="10" y="10" width="1180" height="500" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="492" fill="none" stroke="#C84B31" stroke-width="0.6"/>
+<text x="36" y="42" class="p-mono p-terra" font-size="12" text-anchor="start" >FIG. II</text>
+<text x="36" y="72" class="p-serif" font-size="28" text-anchor="start" >Eight models behind one closed hour</text>
+<text x="900" y="72" class="p-mono" font-size="13" text-anchor="end" >hour_end  ≤  T0</text>
+<rect x="36" y="96" width="360" height="62" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="52" y="122" class="p-serif" font-size="16" text-anchor="start" >15 integrated DOIs</text>
+<text x="52" y="142" class="p-mono p-muted" font-size="11" text-anchor="start" >92-entry ClimateVerse catalog</text>
+<path class="p-dash" d="M 398 127.0 H 412"/>
+<rect x="414" y="96" width="360" height="62" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="430" y="122" class="p-serif" font-size="16" text-anchor="start" >Causal gate</text>
+<text x="430" y="142" class="p-mono p-muted" font-size="11" text-anchor="start" >hour_end ≤ T0  ·  Asia/Kolkata</text>
+<path class="p-dash" d="M 776 127.0 H 790"/>
+<rect x="792" y="96" width="360" height="62" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="808" y="122" class="p-serif" font-size="16" text-anchor="start" >2-stage Hampel</text>
+<text x="808" y="142" class="p-mono p-muted" font-size="11" text-anchor="start" >flag_high_1000 or &gt; 450, then 7 h</text>
+<path class="p-dash" d="M 216 158 V 176"/>
+<path class="p-dash" d="M 594 158 V 176"/>
+<path class="p-dash" d="M 972 158 V 176"/>
+<path class="p-dash" d="M 216 176 H 972"/>
+<path class="p-dash" d="M 171 176 V 196"/>
+<rect x="36" y="196" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="50" y="220" class="p-mono p-terra" font-size="12" text-anchor="start" >M1</text>
+<text x="88" y="220" class="p-serif" font-size="15" text-anchor="start" >tanh-MOS CAMS</text>
+<text x="50" y="248" class="p-mono" font-size="13" text-anchor="start" >24h   9.7752</text>
+<text x="50" y="270" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   10.0666</text>
+<path class="p-dash" d="M 455 176 V 196"/>
+<rect x="320" y="196" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="334" y="220" class="p-mono p-terra" font-size="12" text-anchor="start" >M2</text>
+<text x="372" y="220" class="p-serif" font-size="15" text-anchor="start" >GAM · Duan · AnEn</text>
+<text x="334" y="248" class="p-mono" font-size="13" text-anchor="start" >24h   9.3648</text>
+<text x="334" y="270" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   9.7165</text>
+<path class="p-dash" d="M 739 176 V 196"/>
+<rect x="604" y="196" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="618" y="220" class="p-mono p-terra" font-size="12" text-anchor="start" >M3</text>
+<text x="656" y="220" class="p-serif" font-size="15" text-anchor="start" >LightGBM residual</text>
+<text x="618" y="248" class="p-mono" font-size="13" text-anchor="start" >24h   10.484</text>
+<text x="618" y="270" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   10.8747</text>
+<path class="p-dash" d="M 1023 176 V 196"/>
+<rect x="888" y="196" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="902" y="220" class="p-mono p-terra" font-size="12" text-anchor="start" >M4</text>
+<text x="940" y="220" class="p-serif" font-size="15" text-anchor="start" >CatBoost residual</text>
+<text x="902" y="248" class="p-mono" font-size="13" text-anchor="start" >24h   10.3284</text>
+<text x="902" y="270" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   10.8312</text>
+<rect x="36" y="304" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="50" y="328" class="p-mono p-terra" font-size="12" text-anchor="start" >M5</text>
+<text x="88" y="328" class="p-serif" font-size="15" text-anchor="start" >XGBoost residual</text>
+<text x="50" y="356" class="p-mono" font-size="13" text-anchor="start" >24h   10.5744</text>
+<text x="50" y="378" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   11.418</text>
+<rect x="320" y="304" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="334" y="328" class="p-mono p-terra" font-size="12" text-anchor="start" >M6</text>
+<text x="372" y="328" class="p-serif" font-size="15" text-anchor="start" >Wind ST-GAT</text>
+<text x="334" y="356" class="p-mono" font-size="13" text-anchor="start" >24h   10.242</text>
+<text x="334" y="378" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   9.8261</text>
+<rect x="604" y="304" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="618" y="328" class="p-mono p-terra" font-size="12" text-anchor="start" >M7</text>
+<text x="656" y="328" class="p-serif" font-size="15" text-anchor="start" >TimesFM 3.0</text>
+<text x="618" y="356" class="p-mono" font-size="13" text-anchor="start" >24h   9.6379</text>
+<text x="618" y="378" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   10.1333</text>
+<rect x="888" y="304" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="902" y="328" class="p-mono p-terra" font-size="12" text-anchor="start" >M8</text>
+<text x="940" y="328" class="p-serif" font-size="15" text-anchor="start" >Chronos-2 · 21q</text>
+<text x="902" y="356" class="p-mono" font-size="13" text-anchor="start" >24h   9.3604</text>
+<text x="902" y="378" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   9.7299</text>
+<rect x="36" y="424" width="1128" height="72" fill="#0A1119"/>
+<text x="56" y="452" class="p-serif" font-size="18" text-anchor="start" style="fill:#F7F4EB" >Simplex combiner</text>
+<text x="56" y="476" class="p-mono" font-size="12" text-anchor="start" style="fill:#D9D0C2" >SLSQP + Nelder–Mead, then station shrinkage</text>
+<text x="760" y="450" class="p-serif" font-size="22" text-anchor="start" style="fill:#C84B31" >9.1531</text>
+<text x="900" y="450" class="p-mono" font-size="12" text-anchor="start" style="fill:#F7F4EB" >24h</text>
+<text x="980" y="450" class="p-serif" font-size="22" text-anchor="start" style="fill:#C84B31" >9.2545</text>
+<text x="1104" y="450" class="p-mono" font-size="12" text-anchor="start" style="fill:#F7F4EB" >72h</text>
+<text x="760" y="476" class="p-mono" font-size="11" text-anchor="start" style="fill:#D9D0C2" >shrinkage  9.2903 → 9.1531    ·    9.4726 → 9.2545</text>
+</svg>
+</figure><p class="caption">Fig. II. Card numbers are October out-of-fold RMSE, µg/m³. The dark bar is the stacked ensemble after station shrinkage.</p></div><div class="row wide"><div class=""><table>
+<thead><tr><th>Model</th><th>24h OOF</th><th>72h OOF</th><th>Gain vs starter RF</th></tr></thead>
+<tbody>
+<tr><td>90-day station mean</td><td>37.9949</td><td>38.8708</td><td>-171.94% / -117.47%</td></tr>
+<tr><td>Starter random forest</td><td>13.9719</td><td>17.8742</td><td>+0.00% / +0.00%</td></tr>
+<tr><td>7-day diurnal shrinkage</td><td>14.2873</td><td>16.6453</td><td>-2.26% / +6.88%</td></tr>
+<tr><td>M1 · tanh-MOS CAMS prior</td><td>9.7752</td><td>10.0666</td><td>+30.04% / +43.68%</td></tr>
+<tr><td>M2 · Huber/Ridge GAM + Duan</td><td>9.3648</td><td>9.7165</td><td>+32.97% / +45.64%</td></tr>
+<tr><td>M3 · LightGBM residual</td><td>10.484</td><td>10.8747</td><td>+24.96% / +39.16%</td></tr>
+<tr><td>M4 · CatBoost residual</td><td>10.3284</td><td>10.8312</td><td>+26.08% / +39.40%</td></tr>
+<tr><td>M5 · XGBoost residual</td><td>10.5744</td><td>11.418</td><td>+24.32% / +36.12%</td></tr>
+<tr><td>M6 · Wind-guided ST-GAT</td><td>10.242</td><td>9.8261</td><td>+26.70% / +45.03%</td></tr>
+<tr><td>M7 · TimesFM 3.0</td><td>9.6379</td><td>10.1333</td><td>+31.02% / +43.31%</td></tr>
+<tr><td>M8 · Chronos-2</td><td>9.3604</td><td>9.7299</td><td>+33.01% / +45.56%</td></tr>
+<tr class="ens"><td>8-model ensemble</td><td>9.1531</td><td>9.2545</td><td>+34.49% / +48.22%</td></tr>
+</tbody></table></div><p class="caption">October 2026, five folds, 12–21 October, scored on raw pm25. Source: validation_leaderboard_gap24h.csv and validation_leaderboard_gap72h.csv.</p></div><div class="row"><div class="main"><p>At 24 hours the saved simplex puts <strong>0.4211</strong> on the GAM and <strong>0.4211</strong> on Chronos-2. The other six components sit on a shared floor of <strong>0.0263</strong>. Shrinkage moves the out-of-fold RMSE from <strong>9.2903</strong> to <strong>9.1531</strong>. Byculla’s scale is <strong>0.75</strong>. Borivali East, Malad West, and Shivaji Nagar are <strong>1.02</strong>.</p></div></div><div class="row"><div class="main"><p>At 72 hours the mass moves. Chronos-2 is <strong>0.3796</strong>, the wind-guided graph is <strong>0.3455</strong>, the GAM is <strong>0.1563</strong>, and the floor is <strong>0.0237</strong>. Shrinkage moves <strong>9.4726</strong> to <strong>9.2545</strong>. Byculla stays at <strong>0.75</strong>. Shivaji Nagar is <strong>0.975</strong>. The two western stations stay at <strong>1.02</strong>.</p></div></div><div class="row wide"><div class=""><table>
+<thead><tr><th>Component</th><th>24h weight</th><th>72h weight</th></tr></thead><tbody>
+<tr><td>M1 CAMS prior</td><td>0.0263</td><td>0.0237</td></tr>
+<tr><td>M2 GAM</td><td>0.4211</td><td>0.1563</td></tr>
+<tr><td>M3 LightGBM</td><td>0.0263</td><td>0.0237</td></tr>
+<tr><td>M4 CatBoost</td><td>0.0263</td><td>0.0237</td></tr>
+<tr><td>M5 XGBoost</td><td>0.0263</td><td>0.0237</td></tr>
+<tr><td>M6 ST-GAT</td><td>0.0263</td><td>0.3455</td></tr>
+<tr><td>M7 TimesFM 3.0</td><td>0.0263</td><td>0.0237</td></tr>
+<tr><td>M8 Chronos-2</td><td>0.4211</td><td>0.3796</td></tr>
+</tbody></table></div><p class="caption">Saved simplex weights in ensemble_weights_gap24h.json and ensemble_weights_gap72h.json.</p></div><h2>Across the island</h2><div class="row"><div class="main"><p>The afternoon wind that clears the CPCB trough is the Arabian Sea breeze, treated in the feature set as a 285° onshore axis. Shivaji Nagar is parameterized 0.8 km west-northwest of the Deonar landfill, with a 75° drainage axis. Thane Creek is a 110° axis. Model 6 adds the wind vector to the graph: a neighbor upwind of the target gets a larger attention logit, and a neighbor off the wind does not.</p></div></div><div class="row wide"><figure class="plate"><svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-label="Coastal boundary-layer cross-section">
+<title>Coastal boundary-layer cross-section</title>
+<rect width="100%" height="100%" fill="#F7F4EB"/>
+
+<style>
+  .p-serif { font-family: "Newsreader", Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif; fill: #0A1119; }
+  .p-mono { font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; fill: #0A1119; }
+  .p-deva { font-family: "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Kohinoor Devanagari", "Nirmala UI", serif; fill: #0A1119; }
+  .p-muted { fill: #5E564C; }
+  .p-terra { fill: #C84B31; }
+  .p-sea { fill: #2F5D62; }
+  .p-wind { fill: none; stroke: #2F5D62; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 1.5 8; animation: vd-drift 11s linear infinite; }
+  .p-dash { fill: none; stroke: #C84B31; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 4 7; animation: vd-drift 7.5s linear infinite; }
+  .p-beacon { fill: none; stroke: #C84B31; stroke-width: 1.15; transform-box: fill-box; transform-origin: center; animation: vd-pulse 2.8s ease-out infinite; }
+  .p-lid { transform-box: fill-box; transform-origin: center; animation: vd-breathe 8.5s ease-in-out infinite; }
+  @keyframes vd-drift { to { stroke-dashoffset: -240; } }
+  @keyframes vd-pulse { 0% { opacity: 0.9; } 75% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes vd-breathe { 0%, 100% { transform: translateY(7px); } 50% { transform: translateY(-16px); } }
+</style>
+
+<rect x="10" y="10" width="1180" height="380" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="372" fill="none" stroke="#C84B31" stroke-width="0.6"/>
+<text x="36" y="42" class="p-mono p-terra" font-size="12" text-anchor="start" >FIG. IV</text>
+<text x="36" y="74" class="p-serif" font-size="28" text-anchor="start" >A west wind, a landfill, and a creek</text>
+<text x="36" y="98" class="p-serif p-muted" font-size="14" text-anchor="start" >Schematic coastal sequence. Vertical scale is drawn so both lids stay visible.</text>
+<rect x="36" y="150" width="150" height="150" fill="#D7E4E1"/>
+<path d="M186 300 L186 250 C 240 246, 300 236, 360 240 C 430 246, 470 228, 530 232 C 600 238, 650 226, 730 230 C 790 234, 830 248, 860 252 L 860 300 Z" fill="#E6DDD0" stroke="#0A1119" stroke-width="0.8"/>
+<rect x="860" y="250" width="120" height="50" fill="#D7E4E1"/>
+<path d="M980 300 L980 256 C 1040 250, 1100 258, 1148 254 L 1148 300 Z" fill="#E6DDD0" stroke="#0A1119" stroke-width="0.8"/>
+<path class="p-wind" d="M48 176 C 120 168, 180 184, 250 172"/>
+<path class="p-wind" d="M40 200 C 130 194, 200 208, 280 198" style="animation-delay:-3s"/>
+<path class="p-dash" d="M980 214 C 900 208, 820 220, 740 210"/>
+<path d="M48 132 C 220 124, 420 118, 640 126 C 860 134, 1000 122, 1152 128" fill="none" stroke="#2F5D62" stroke-width="1.5" stroke-dasharray="5 6"/>
+<text x="48" y="116" class="p-mono p-sea" font-size="11" text-anchor="start" >afternoon mean  1,863 m at 12:00</text>
+<g class="p-lid"><path d="M48 236 C 220 228, 420 232, 640 226 C 860 220, 1000 230, 1152 224" fill="none" stroke="#C84B31" stroke-width="1.7"/><text x="700" y="218" class="p-mono p-terra" font-size="11">nocturnal mean  84 m at 05:00</text></g>
+<line x1="90" y1="300" x2="90" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="90" y="334" class="p-serif" font-size="12" text-anchor="middle" >Arabian Sea</text>
+<text x="90" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >285° onshore</text>
+<line x1="250" y1="300" x2="250" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="250" y="334" class="p-serif" font-size="12" text-anchor="middle" >Malad West</text>
+<text x="250" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >11611</text>
+<line x1="400" y1="300" x2="400" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="400" y="334" class="p-serif" font-size="12" text-anchor="middle" >Borivali East</text>
+<text x="400" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >11606</text>
+<line x1="560" y1="300" x2="560" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="560" y="334" class="p-serif" font-size="12" text-anchor="middle" >Byculla</text>
+<text x="560" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >3409510</text>
+<line x1="760" y1="300" x2="760" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="760" y="334" class="p-serif" font-size="12" text-anchor="middle" >Shivaji Nagar</text>
+<text x="760" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >3409511 · Deonar 75°</text>
+<line x1="910" y1="300" x2="910" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="910" y="334" class="p-serif" font-size="12" text-anchor="middle" >Thane Creek</text>
+<text x="910" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >110°</text>
+<line x1="1060" y1="300" x2="1060" y2="316" stroke="#0A1119" stroke-opacity="0.45"/>
+<text x="1060" y="334" class="p-serif" font-size="12" text-anchor="middle" >Navi Mumbai</text>
+<text x="1060" y="350" class="p-mono p-muted" font-size="10" text-anchor="middle" >MIDC shore</text>
+<text x="36" y="378" class="p-mono p-muted" font-size="11" text-anchor="start" >Onshore flow 285° from the Arabian Sea. Deonar drainage near 75°. Creek axis near 110°.</text>
+</svg>
+</figure><p class="caption">Fig. IV. The terracotta lid breathes around the nocturnal October mean, 84 m at 05:00. The teal lid is the afternoon mean, 1,863 m at 12:00. The drawing is a wind-regime sequence, with a schematic vertical scale.</p></div><h2>What the twin shows</h2><div class="row"><div class="main"><p>The same stack is the source for the 3D twin in <code>web/</code>. The city map holds 18 stations, the 24 BMC wards, and the wind field. The air column is the boundary-layer lid and the plumes under it. The forecast view shows the decile and quantile fans whose integral is the submitted mean. Ward actions ranks the 24 wards and opens the ClimateVerse catalog beside a GRAP briefing.</p></div></div><div class="gallery"><input type="radio" name="view" id="view1" checked><input type="radio" name="view" id="view2"><input type="radio" name="view" id="view3"><input type="radio" name="view" id="view4"><div class="shot-nav"><label for="view1">01  City map</label><label for="view2">02  Air column</label><label for="view3">03  Forecast</label><label for="view4">04  Ward actions</label></div><div class="frames"><figure class="frame f1"><img src="https://raw.githubusercontent.com/guglxni/VayuDrishti/main/web/screenshots/01-city-map.png" alt="City map"><figcaption class="caption">City map. Eighteen station columns, 24 BMC wards, wind streamlines, and AirPhyNet flux arcs.</figcaption></figure><figure class="frame f2"><img src="https://raw.githubusercontent.com/guglxni/VayuDrishti/main/web/screenshots/02-air-column.png" alt="Air column"><figcaption class="caption">Air column. The PBLH lid, aerosol particles, and source plumes over the island.</figcaption></figure><figure class="frame f3"><img src="https://raw.githubusercontent.com/guglxni/VayuDrishti/main/web/screenshots/03-forecast.png" alt="Forecast"><figcaption class="caption">Forecast. TimesFM 3.0 deciles, Chronos-2 quantiles, and the trapezoidal mean.</figcaption></figure><figure class="frame f4"><img src="https://raw.githubusercontent.com/guglxni/VayuDrishti/main/web/screenshots/04-ward-actions.png" alt="Ward actions"><figcaption class="caption">Ward actions. Ward risk, the ClimateVerse catalog, and the BMC GRAP copilot.</figcaption></figure></div></div><h2>Fifteen datasets inside a catalog of 92</h2><div class="row"><div class="main"><p>The digital twin ships a 92-entry ClimateVerse catalog. Fifteen of those datasets are wired into the forecast or the civic views. The chemical forecast is CAMS. The lid height is Open-Meteo. The airport wind is VABB, without visibility and without weather codes. Wards, schools, hospitals, landfills, fires, and construction sites belong to the civic layer.</p></div></div><div class="row wide"><div class="dois"><table><thead><tr><th>DOI</th><th>Role</th></tr></thead><tbody>
+<tr><td><a href="https://doi.org/10.71646/YAQTMA">10.71646/YAQTMA</a></td><td>CPCB hourly archive, Train.csv, 14 auxiliary stations</td></tr>
+<tr><td><a href="https://doi.org/10.71646/XXOBKO">10.71646/XXOBKO</a></td><td>Open-Meteo NWP / ERA5, including boundary-layer height</td></tr>
+<tr><td><a href="https://doi.org/10.71646/CAMS26">10.71646/CAMS26</a></td><td>ECMWF CAMS composition (PM2.5, gases, dust, AOD)</td></tr>
+<tr><td><a href="https://doi.org/10.71646/EAE4EE">10.71646/EAE4EE</a></td><td>VABB METAR: tmpc, dwpc, relh, drct, sknt, alti</td></tr>
+<tr><td><a href="https://doi.org/10.71646/GHSZ7J">10.71646/GHSZ7J</a></td><td>Google AlphaEarth Foundations, 10 m embeddings</td></tr>
+<tr><td><a href="https://doi.org/10.71646/EV3RBJ">10.71646/EV3RBJ</a></td><td>Google Open Buildings V3 footprints</td></tr>
+<tr><td><a href="https://doi.org/10.71646/EREDWQ">10.71646/EREDWQ</a></td><td>BMC wards A–T</td></tr>
+<tr><td><a href="https://doi.org/10.71646/AAGK0G">10.71646/AAGK0G</a></td><td>WorldPop 2026 gridded population</td></tr>
+<tr><td><a href="https://doi.org/10.71646/MWQNR8">10.71646/MWQNR8</a></td><td>Deonar, Mulund, and Kanjurmarg landfill polygons</td></tr>
+<tr><td><a href="https://doi.org/10.71646/VA5BD9">10.71646/VA5BD9</a></td><td>TROPOMI / waste-plume attribution</td></tr>
+<tr><td><a href="https://doi.org/10.71646/XJIY8W">10.71646/XJIY8W</a></td><td>UDISE+ school directory</td></tr>
+<tr><td><a href="https://doi.org/10.71646/1XSUVR">10.71646/1XSUVR</a></td><td>BMC hospitals and dispensaries</td></tr>
+<tr><td><a href="https://doi.org/10.71646/YJIAGQ">10.71646/YJIAGQ</a></td><td>NASA FIRMS active-fire anomalies</td></tr>
+<tr><td><a href="https://doi.org/10.71646/4ULQRE">10.71646/4ULQRE</a></td><td>MahaRERA construction sites</td></tr>
+<tr><td><a href="https://doi.org/10.71646/MKJGDY">10.71646/MKJGDY</a></td><td>Maharashtra public-holiday calendar</td></tr>
+</tbody></table></div><p class="caption">Integrated ClimateVerse DOIs. The 92-entry count is the catalog shipped in web/public/data/climateverse_catalog.json.</p></div><h2>Reproduce</h2><div class="row"><div class="main"><p>Python 3.12 and uv. Fetched tables and checkpoints stay out of git. Zindi credentials stay in the environment.</p></div></div><pre><code>uv sync
+uv run python src/fetch_data.py
+uv run python src/validation.py &amp;&amp; uv run python src/ensemble.py &amp;&amp; uv run python src/submit.py</code></pre><div class="row"><div class="main"><p>A submission has 2,592 rows, columns ID and Target, the SampleSubmission.csv order, and finite values at least 0. The Colab review notebooks are <code>notebooks/Mumbai_Winning_Colab.ipynb</code> and <code>notebooks/Mumbai_Winning_Solution.ipynb</code>.</p></div></div><div class="row"><div class="main"><p>Plate III was drawn from Train.csv + Open-Meteo CAMS/PBLH, 1–21 October 2026, hour_start. Leaderboard plates were drawn from the committed CSV and JSON files in <code>data/processed/</code>. This file is the November 2026 monograph; the private window had not yet been scored.</p></div></div>
+  <footer>
+    <p>VayuDrishti research monograph · November 2026 · <a href="https://gistpreview.github.io/?__GIST_ID__">Magazine preview</a> · <a href="https://github.com/guglxni/VayuDrishti">Repository</a></p>
+  </footer>
+</div>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/contrib/auto-render.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  if (window.renderMathInElement) {
+    renderMathInElement(document.body, {
+      delimiters: [{left: "$$", right: "$$", display: true}],
+      throwOnError: false
+    });
+  }
+});
+</script>
+</body>
+</html>

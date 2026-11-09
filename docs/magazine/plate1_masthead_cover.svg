@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="440" viewBox="0 0 1200 440" role="img" aria-label="VayuDrishti monograph cover">
+<title>VayuDrishti monograph cover</title>
+<rect width="100%" height="100%" fill="#F7F4EB"/>
+
+<style>
+  .p-serif { font-family: "Newsreader", Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif; fill: #0A1119; }
+  .p-mono { font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; fill: #0A1119; }
+  .p-deva { font-family: "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Kohinoor Devanagari", "Nirmala UI", serif; fill: #0A1119; }
+  .p-muted { fill: #5E564C; }
+  .p-terra { fill: #C84B31; }
+  .p-sea { fill: #2F5D62; }
+  .p-wind { fill: none; stroke: #2F5D62; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 1.5 8; animation: vd-drift 11s linear infinite; }
+  .p-dash { fill: none; stroke: #C84B31; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 4 7; animation: vd-drift 7.5s linear infinite; }
+  .p-beacon { fill: none; stroke: #C84B31; stroke-width: 1.15; transform-box: fill-box; transform-origin: center; animation: vd-pulse 2.8s ease-out infinite; }
+  .p-lid { transform-box: fill-box; transform-origin: center; animation: vd-breathe 8.5s ease-in-out infinite; }
+  @keyframes vd-drift { to { stroke-dashoffset: -240; } }
+  @keyframes vd-pulse { 0% { opacity: 0.9; } 75% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes vd-breathe { 0%, 100% { transform: translateY(7px); } 50% { transform: translateY(-16px); } }
+</style>
+
+<rect x="10" y="10" width="1180" height="420" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="412" fill="none" stroke="#C84B31" stroke-width="0.6"/>
+<text x="36" y="40" class="p-mono p-muted" font-size="11" text-anchor="start" >MONOGRAPH SERIES   ·   ATMOSPHERIC &amp; COMPUTATIONAL EARTH SCIENCES</text>
+<text x="1164" y="40" class="p-mono p-muted" font-size="11" text-anchor="end" >VOL. I   ·   NOV 2026</text>
+<line x1="36" y1="52" x2="1164" y2="52" stroke="#0A1119" stroke-width="0.6"/>
+<text x="36" y="96" class="p-deva" font-size="28" text-anchor="start" >वायुदृष्टि</text>
+<text x="36" y="142" class="p-serif" font-size="46" text-anchor="start" >VayuDrishti</text>
+<text x="36" y="176" class="p-serif" font-size="20" text-anchor="start" >Physics-guided multi-scale PM2.5 forecasting</text>
+<text x="36" y="202" class="p-serif" font-size="20" text-anchor="start" >and a 3D boundary-layer digital twin for Mumbai.</text>
+<text x="36" y="230" class="p-serif p-muted" font-size="15" text-anchor="start" >Four CPCB stations. Eight model classes. One closed hour.</text>
+<text x="1164" y="230" class="p-mono" font-size="13" text-anchor="end" >15 h post-Diwali OOF   6.2616 µg/m³</text>
+<rect x="36" y="286" width="1128" height="28" fill="#E7F0EE"/>
+<path class="p-wind" d="M48 300 C 220 292, 400 308, 620 296"/>
+<path class="p-wind" d="M80 308 C 260 302, 480 316, 760 304" style="animation-delay:-4s"/>
+<text x="52" y="278" class="p-mono p-sea" font-size="11" text-anchor="start" >285°</text>
+<text x="1148" y="278" class="p-mono p-sea" font-size="11" text-anchor="end" >110°</text>
+<text x="280" y="278" class="p-serif" font-size="14" text-anchor="middle" >Borivali East</text>
+<circle cx="280" cy="300" r="8" class="p-beacon" style="animation-delay:0s"/><circle cx="280" cy="300" r="3" fill="#C84B31"/>
+<text x="280" y="328" class="p-mono p-muted" font-size="11" text-anchor="middle" >11606</text>
+<text x="520" y="278" class="p-serif" font-size="14" text-anchor="middle" >Malad West</text>
+<circle cx="520" cy="300" r="8" class="p-beacon" style="animation-delay:0.5s"/><circle cx="520" cy="300" r="3" fill="#C84B31"/>
+<text x="520" y="328" class="p-mono p-muted" font-size="11" text-anchor="middle" >11611</text>
+<text x="760" y="278" class="p-serif" font-size="14" text-anchor="middle" >Byculla</text>
+<circle cx="760" cy="300" r="8" class="p-beacon" style="animation-delay:1.0s"/><circle cx="760" cy="300" r="3" fill="#C84B31"/>
+<text x="760" y="328" class="p-mono p-muted" font-size="11" text-anchor="middle" >3409510</text>
+<text x="1000" y="278" class="p-serif" font-size="14" text-anchor="middle" >Shivaji Nagar</text>
+<circle cx="1000" cy="300" r="8" class="p-beacon" style="animation-delay:1.5s"/><circle cx="1000" cy="300" r="3" fill="#C84B31"/>
+<text x="1000" y="328" class="p-mono p-muted" font-size="11" text-anchor="middle" >3409511</text>
+<line x1="36" y1="342" x2="1164" y2="342" stroke="#0A1119" stroke-width="0.6"/>
+<text x="177" y="374" class="p-serif" font-size="30" text-anchor="middle" >9.1531</text>
+<line x1="159" y1="384" x2="195" y2="384" stroke="#C84B31" stroke-width="1.4"/>
+<text x="177" y="402" class="p-mono" font-size="11" text-anchor="middle" >24h October OOF</text>
+<text x="177" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >µg/m³ RMSE</text>
+<text x="459" y="374" class="p-serif" font-size="30" text-anchor="middle" >9.2545</text>
+<line x1="441" y1="384" x2="477" y2="384" stroke="#C84B31" stroke-width="1.4"/>
+<text x="459" y="402" class="p-mono" font-size="11" text-anchor="middle" >72h October OOF</text>
+<text x="459" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >µg/m³ RMSE</text>
+<line x1="318" y1="352" x2="318" y2="424" stroke="#0A1119" stroke-opacity="0.18"/>
+<text x="741" y="374" class="p-serif" font-size="30" text-anchor="middle" >6.0855</text>
+<line x1="723" y1="384" x2="759" y2="384" stroke="#C84B31" stroke-width="1.4"/>
+<text x="741" y="402" class="p-mono" font-size="11" text-anchor="middle" >1–2 November OOF</text>
+<text x="741" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >µg/m³ RMSE</text>
+<line x1="600" y1="352" x2="600" y2="424" stroke="#0A1119" stroke-opacity="0.18"/>
+<text x="1023" y="374" class="p-serif" font-size="30" text-anchor="middle" >0.0</text>
+<line x1="1005" y1="384" x2="1041" y2="384" stroke="#C84B31" stroke-width="1.4"/>
+<text x="1023" y="402" class="p-mono" font-size="11" text-anchor="middle" >Public leaderboard</text>
+<text x="1023" y="418" class="p-mono p-muted" font-size="10" text-anchor="middle" >tied first · xP5LoEHK · sK5XpFqb</text>
+<line x1="882" y1="352" x2="882" y2="424" stroke="#0A1119" stroke-opacity="0.18"/>
+</svg>

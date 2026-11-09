@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-label="Eight-model causal forecasting stack">
+<title>Eight-model causal forecasting stack</title>
+<rect width="100%" height="100%" fill="#F7F4EB"/>
+
+<style>
+  .p-serif { font-family: "Newsreader", Georgia, "Iowan Old Style", Palatino, "Palatino Linotype", serif; fill: #0A1119; }
+  .p-mono { font-family: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace; fill: #0A1119; }
+  .p-deva { font-family: "Tiro Devanagari Hindi", "Noto Serif Devanagari", "Kohinoor Devanagari", "Nirmala UI", serif; fill: #0A1119; }
+  .p-muted { fill: #5E564C; }
+  .p-terra { fill: #C84B31; }
+  .p-sea { fill: #2F5D62; }
+  .p-wind { fill: none; stroke: #2F5D62; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 1.5 8; animation: vd-drift 11s linear infinite; }
+  .p-dash { fill: none; stroke: #C84B31; stroke-width: 1.35; stroke-linecap: round; stroke-dasharray: 4 7; animation: vd-drift 7.5s linear infinite; }
+  .p-beacon { fill: none; stroke: #C84B31; stroke-width: 1.15; transform-box: fill-box; transform-origin: center; animation: vd-pulse 2.8s ease-out infinite; }
+  .p-lid { transform-box: fill-box; transform-origin: center; animation: vd-breathe 8.5s ease-in-out infinite; }
+  @keyframes vd-drift { to { stroke-dashoffset: -240; } }
+  @keyframes vd-pulse { 0% { opacity: 0.9; } 75% { opacity: 0; } 100% { opacity: 0; } }
+  @keyframes vd-breathe { 0%, 100% { transform: translateY(7px); } 50% { transform: translateY(-16px); } }
+</style>
+
+<rect x="10" y="10" width="1180" height="500" fill="none" stroke="#0A1119" stroke-width="1"/><rect x="14" y="14" width="1172" height="492" fill="none" stroke="#C84B31" stroke-width="0.6"/>
+<text x="36" y="42" class="p-mono p-terra" font-size="12" text-anchor="start" >FIG. II</text>
+<text x="36" y="72" class="p-serif" font-size="28" text-anchor="start" >Eight models behind one closed hour</text>
+<text x="900" y="72" class="p-mono" font-size="13" text-anchor="end" >hour_end  ≤  T0</text>
+<rect x="36" y="96" width="360" height="62" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="52" y="122" class="p-serif" font-size="16" text-anchor="start" >15 integrated DOIs</text>
+<text x="52" y="142" class="p-mono p-muted" font-size="11" text-anchor="start" >92-entry ClimateVerse catalog</text>
+<path class="p-dash" d="M 398 127.0 H 412"/>
+<rect x="414" y="96" width="360" height="62" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="430" y="122" class="p-serif" font-size="16" text-anchor="start" >Causal gate</text>
+<text x="430" y="142" class="p-mono p-muted" font-size="11" text-anchor="start" >hour_end ≤ T0  ·  Asia/Kolkata</text>
+<path class="p-dash" d="M 776 127.0 H 790"/>
+<rect x="792" y="96" width="360" height="62" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="808" y="122" class="p-serif" font-size="16" text-anchor="start" >2-stage Hampel</text>
+<text x="808" y="142" class="p-mono p-muted" font-size="11" text-anchor="start" >flag_high_1000 or &gt; 450, then 7 h</text>
+<path class="p-dash" d="M 216 158 V 176"/>
+<path class="p-dash" d="M 594 158 V 176"/>
+<path class="p-dash" d="M 972 158 V 176"/>
+<path class="p-dash" d="M 216 176 H 972"/>
+<path class="p-dash" d="M 171 176 V 196"/>
+<rect x="36" y="196" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="50" y="220" class="p-mono p-terra" font-size="12" text-anchor="start" >M1</text>
+<text x="88" y="220" class="p-serif" font-size="15" text-anchor="start" >tanh-MOS CAMS</text>
+<text x="50" y="248" class="p-mono" font-size="13" text-anchor="start" >24h   9.7752</text>
+<text x="50" y="270" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   10.0666</text>
+<path class="p-dash" d="M 455 176 V 196"/>
+<rect x="320" y="196" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="334" y="220" class="p-mono p-terra" font-size="12" text-anchor="start" >M2</text>
+<text x="372" y="220" class="p-serif" font-size="15" text-anchor="start" >GAM · Duan · AnEn</text>
+<text x="334" y="248" class="p-mono" font-size="13" text-anchor="start" >24h   9.3648</text>
+<text x="334" y="270" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   9.7165</text>
+<path class="p-dash" d="M 739 176 V 196"/>
+<rect x="604" y="196" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="618" y="220" class="p-mono p-terra" font-size="12" text-anchor="start" >M3</text>
+<text x="656" y="220" class="p-serif" font-size="15" text-anchor="start" >LightGBM residual</text>
+<text x="618" y="248" class="p-mono" font-size="13" text-anchor="start" >24h   10.484</text>
+<text x="618" y="270" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   10.8747</text>
+<path class="p-dash" d="M 1023 176 V 196"/>
+<rect x="888" y="196" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="902" y="220" class="p-mono p-terra" font-size="12" text-anchor="start" >M4</text>
+<text x="940" y="220" class="p-serif" font-size="15" text-anchor="start" >CatBoost residual</text>
+<text x="902" y="248" class="p-mono" font-size="13" text-anchor="start" >24h   10.3284</text>
+<text x="902" y="270" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   10.8312</text>
+<rect x="36" y="304" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="50" y="328" class="p-mono p-terra" font-size="12" text-anchor="start" >M5</text>
+<text x="88" y="328" class="p-serif" font-size="15" text-anchor="start" >XGBoost residual</text>
+<text x="50" y="356" class="p-mono" font-size="13" text-anchor="start" >24h   10.5744</text>
+<text x="50" y="378" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   11.418</text>
+<rect x="320" y="304" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="334" y="328" class="p-mono p-terra" font-size="12" text-anchor="start" >M6</text>
+<text x="372" y="328" class="p-serif" font-size="15" text-anchor="start" >Wind ST-GAT</text>
+<text x="334" y="356" class="p-mono" font-size="13" text-anchor="start" >24h   10.242</text>
+<text x="334" y="378" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   9.8261</text>
+<rect x="604" y="304" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="618" y="328" class="p-mono p-terra" font-size="12" text-anchor="start" >M7</text>
+<text x="656" y="328" class="p-serif" font-size="15" text-anchor="start" >TimesFM 3.0</text>
+<text x="618" y="356" class="p-mono" font-size="13" text-anchor="start" >24h   9.6379</text>
+<text x="618" y="378" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   10.1333</text>
+<rect x="888" y="304" width="270" height="96" fill="#FBF8F1" stroke="#0A1119" stroke-width="0.8"/>
+<text x="902" y="328" class="p-mono p-terra" font-size="12" text-anchor="start" >M8</text>
+<text x="940" y="328" class="p-serif" font-size="15" text-anchor="start" >Chronos-2 · 21q</text>
+<text x="902" y="356" class="p-mono" font-size="13" text-anchor="start" >24h   9.3604</text>
+<text x="902" y="378" class="p-mono p-muted" font-size="13" text-anchor="start" >72h   9.7299</text>
+<rect x="36" y="424" width="1128" height="72" fill="#0A1119"/>
+<text x="56" y="452" class="p-serif" font-size="18" text-anchor="start" style="fill:#F7F4EB" >Simplex combiner</text>
+<text x="56" y="476" class="p-mono" font-size="12" text-anchor="start" style="fill:#D9D0C2" >SLSQP + Nelder–Mead, then station shrinkage</text>
+<text x="760" y="450" class="p-serif" font-size="22" text-anchor="start" style="fill:#C84B31" >9.1531</text>
+<text x="900" y="450" class="p-mono" font-size="12" text-anchor="start" style="fill:#F7F4EB" >24h</text>
+<text x="980" y="450" class="p-serif" font-size="22" text-anchor="start" style="fill:#C84B31" >9.2545</text>
+<text x="1104" y="450" class="p-mono" font-size="12" text-anchor="start" style="fill:#F7F4EB" >72h</text>
+<text x="760" y="476" class="p-mono" font-size="11" text-anchor="start" style="fill:#D9D0C2" >shrinkage  9.2903 → 9.1531    ·    9.4726 → 9.2545</text>
+</svg>
